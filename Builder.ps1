@@ -1,5 +1,14 @@
 $MsBuildPath="C:\Program Files (x86)\MSBuild\12.0\Bin\MsBuild.exe"
 
+function Builder-LogFileLocation {
+	param (
+		[String]$SolutionName,
+		[String]$LogDirectory
+	)
+	
+	Return "$LogDirectory/$SolutionName.log"
+}
+
 # Builds a solution.
 function Builder-BuildSolution {
 	param (
@@ -9,7 +18,8 @@ function Builder-BuildSolution {
 	)
 	
 	& $MsBuildPath $SolutionPath /t:Clean /p:Configuration=Release /verbosity:quiet > $null
-	& $MsBuildPath $SolutionPath /t:Rebuild /p:Configuration=Release /fileLogger "/fileLoggerParameters:LogFile=$LogDirectory/$SolutionName.log;Verbosity=quiet;Encoding=UTF-8" > $null
+	$params = "/fileLoggerParameters:LogFile=$(Builder-LogFileLocation $SolutionName $LogDirectory);Verbosity=quiet;Encoding=UTF-8"
+	& $MsBuildPath $SolutionPath /t:Rebuild /p:Configuration=Release /fileLogger $params > $null
 	$result = $LastExitCode
 	Return $result -Eq 0
 }
@@ -27,7 +37,8 @@ function Builder-BuildSolutions {
 	}
 
 	New-Item $LogsDirectory -ItemType Directory > $null
-	Start-Transcript -Path (Join-Path $LogsDirectory "BranchBuild.log") -Force
+	$buildLog = (Join-Path $LogsDirectory "BranchBuild.log")
+	Start-Transcript -Path $buildLog -Force
 	$MsBuildLogs = (Join-Path $LogsDirectory "MsBuildLogs")
 	New-Item $MsBuildLogs -ItemType Directory > $null
 	$BranchConfiguration = [xml](Get-Content $ConfigurationFile)
@@ -45,6 +56,7 @@ function Builder-BuildSolutions {
 		if ($result)
 		{
 			Write-Host "Build for solution $($solution.Name) succeeded"
+			Remove-Item (Builder-LogFileLocation $solution.Name $MsBuildLogs) -Force
 			if ($solution.Output -And $solution.Output.Pattern)
 			{
 				if ($solution.Output.Pattern.Count -gt 0)
@@ -70,4 +82,5 @@ function Builder-BuildSolutions {
 	}
 	
 	Stop-Transcript
+	Return $buildLog
 }

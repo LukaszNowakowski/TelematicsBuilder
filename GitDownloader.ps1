@@ -34,5 +34,3 @@ function GitDownloader-GetRepository {
 	Write-Host ""
 	Write-Host ""
 }
-
-#GitDownloader-GetRepository "https://github.com/Operasoft/axa-applications.git" "C:\GitHub\AXA\Temp" "master"
