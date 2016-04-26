@@ -38,7 +38,7 @@ function Builder-BuildSolutions {
 
 	New-Item $LogsDirectory -ItemType Directory > $null
 	$buildLog = (Join-Path $LogsDirectory "BranchBuild.log")
-	Start-Transcript -Path $buildLog -Force
+	[void](Start-Transcript -Path $buildLog -Force)
 	$MsBuildLogs = (Join-Path $LogsDirectory "MsBuildLogs")
 	New-Item $MsBuildLogs -ItemType Directory > $null
 	$BranchConfiguration = [xml](Get-Content $ConfigurationFile)
@@ -80,7 +80,8 @@ function Builder-BuildSolutions {
 		Write-Host ""
 		Write-Host ""
 	}
+		
+	[void](Stop-Transcript)
 	
-	Stop-Transcript
 	Return $buildLog
 }

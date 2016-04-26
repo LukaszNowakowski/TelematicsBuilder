@@ -26,6 +26,10 @@ Clear-Host
 
 GitDownloader-GetRepository $GitRepositoryPath $LocalDirectory $BranchToBuild
 $buildLogFile = Builder-BuildSolutions (Join-Path $LocalDirectory $BranchConfigurationFileName) $LogsPath $LocalDirectory
+If (Test-Path $LogsPackagePath)
+{
+	Remove-Item $LogsPackagePath
+}
 
 Add-Type -A System.IO.Compression.FileSystem
 [IO.Compression.ZipFile]::CreateFromDirectory($LogsPath, $LogsPackagePath)
