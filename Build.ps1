@@ -25,7 +25,21 @@ param (
 Clear-Host
 
 GitDownloader-GetRepository $GitRepositoryPath $LocalDirectory $BranchToBuild
-$buildLogFile = Builder-BuildSolutions (Join-Path $LocalDirectory $BranchConfigurationFileName) $LogsPath $LocalDirectory
+$BranchConfigurationPath = Join-Path $LocalDirectory $BranchConfigurationFileName
+$buildLogFile = Builder-BuildSolutions $BranchConfigurationPath $LogsPath $LocalDirectory
+
+$branchConfiguration = [xml](Get-Content $BranchConfigurationPath -Raw)
+
+$currentLocation = Get-Location
+Set-Location $LocalDirectory
+foreach($destination in $branchConfiguration.Branch.Solution.Output.Destination)
+{
+	git add $destination
+}
+
+git commit -m ("Commit of built performed on {0}" -f (Get-Date))
+
+Set-Location $currentLocation
 If (Test-Path $LogsPackagePath)
 {
 	Remove-Item $LogsPackagePath
@@ -33,8 +47,7 @@ If (Test-Path $LogsPackagePath)
 
 Add-Type -A System.IO.Compression.FileSystem
 [IO.Compression.ZipFile]::CreateFromDirectory($LogsPath, $LogsPackagePath)
-
-Move-Item $LogsPackagePath $LogsPackagePath
+Write-Host $buildLogFile
 $text = Get-Content $buildLogFile -Raw
 $subject = "Report from building of branch $BranchToBuild"
 Send-MailMessage `

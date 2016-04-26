@@ -57,17 +57,14 @@ function Builder-BuildSolutions {
 		{
 			Write-Host "Build for solution $($solution.Name) succeeded"
 			Remove-Item (Builder-LogFileLocation $solution.Name $MsBuildLogs) -Force
-			if ($solution.Output -And $solution.Output.Pattern)
+			foreach ($output in $solution.Output)
 			{
-				if ($solution.Output.Pattern.Count -gt 0)
+				foreach ($pattern in $output.Pattern)
 				{
-					foreach ($pattern in $solution.Output.Pattern)
+					$compiledFiles = Get-ChildItem $BranchRoot -Filter $pattern
+					foreach ($compiled in $compiledFiles)
 					{
-						$outputs = Get-ChildItem $BranchRoot -Filter $pattern
-						foreach ($output in $outputs)
-						{
-							Copy-Item $output.FullName "$BranchRoot/$($solution.Output.Destination)"
-						}
+						Copy-Item $compiled.FullName "$BranchRoot/$($output.Destination)"
 					}
 				}
 			}
