@@ -27,18 +27,11 @@ function Builder-BuildSolution {
 function Builder-BuildSolutions {
 	param (
 		[String]$ConfigurationFile,
+		[String]$BranchRoot,
 		[String]$LogsDirectory,
-		[String]$BranchRoot
+        [String]$BuildLog
 	)
 
-	If (Test-Path $LogsDirectory)
-	{
-		Remove-Item $LogsDirectory -Force -Recurse
-	}
-
-	New-Item $LogsDirectory -ItemType Directory > $null
-	$buildLog = (Join-Path $LogsDirectory "BranchBuild.log")
-	[void](Start-Transcript -Path $buildLog -Force)
 	$MsBuildLogs = (Join-Path $LogsDirectory "MsBuildLogs")
 	New-Item $MsBuildLogs -ItemType Directory > $null
 	$BranchConfiguration = [xml](Get-Content $ConfigurationFile)
@@ -49,12 +42,15 @@ function Builder-BuildSolutions {
 		Return;
 	}
 
+    $successes = 0
+    $failures = 0
+    [SystemCollections.ArrayList]$failedProjects = New-Object System.Collections.ArrayList
 	foreach ($solution in $BranchConfiguration.Branch.Solution)
 	{
-		Write-Host "Rebuilding solution $($solution.Name)"
 		$result = (Builder-BuildSolution "$BranchRoot/$($solution.Path)" $solution.Name $MsBuildLogs)
 		if ($result)
 		{
+            $successes++
 			Write-Host "Build for solution $($solution.Name) succeeded"
 			Remove-Item (Builder-LogFileLocation $solution.Name $MsBuildLogs) -Force
 			foreach ($output in $solution.Output)
@@ -71,14 +67,23 @@ function Builder-BuildSolutions {
 		}
 		else
 		{
+            $failures++
+            [void]$failedProjects.Add($solution.Path)
 			Write-Host "Build for solution $($solution.Name) failed"
 		}
 		
 		Write-Host ""
-		Write-Host ""
 	}
-		
-	[void](Stop-Transcript)
-	
-	Return $buildLog
+
+    Write-Host "Build $($successes + $failures) projects"
+    Write-Host "$successes succeeded"
+    Write-Host "$failures failed"
+    if ($failures -gt 0)
+    {
+        Write-Host "Failed projects:"
+        foreach ($solution in $failedProjects)
+        {
+            Write-Host "    $solution"
+        }
+    }
 }

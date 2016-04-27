@@ -1,44 +1,68 @@
 ﻿param (
-    [parameter(Position=0,Mandatory=$true,ValueFromPipeline=$true,HelpMessage="Path to the Git repository.")]
+    [parameter(Position=1,Mandatory=$false,ValueFromPipeline=$true,HelpMessage="Root path of repository.")]
+    [ValidateNotNullOrEmpty()]
+    [String]$GitRepositoryRoot = 'git@github.com:Operasoft/',
+    [parameter(Position=2,Mandatory=$false,ValueFromPipeline=$true,HelpMessage="Path to directory to store logs in.")]
 	[ValidateNotNullOrEmpty()]
-	[String]$GitRepositoryPath,
-    [parameter(Position=1,Mandatory=$true,ValueFromPipeline=$true,HelpMessage="Name of branch configuration file.")]
+	[String]$LogsDirectory = 'C:/GitHub/AXA/Logs',
+    [parameter(Position=3,Mandatory=$false,ValueFromPipeline=$true,HelpMessage="Path to local directory for download source code.")]
 	[ValidateNotNullOrEmpty()]
-	[String]$BranchConfigurationFileName,
-    [parameter(Position=2,Mandatory=$true,ValueFromPipeline=$true,HelpMessage="Path to directory to store logs in.")]
+	[String]$LocalDirectory = 'C:/GitHub/AXA/BuildWorkspace',
+    [parameter(Position=4,Mandatory=$false,ValueFromPipeline=$true,HelpMessage="Name of axa-applications branch to build.")]
 	[ValidateNotNullOrEmpty()]
-	[String]$LogsPath,
-    [parameter(Position=3,Mandatory=$true,ValueFromPipeline=$true,HelpMessage="Path to local directory for download source code.")]
+	[String]$ApplicationsBranch = 'branch-automation-refactoring',
+    [parameter(Position=4,Mandatory=$false,ValueFromPipeline=$true,HelpMessage="Name of axa-services branch to build.")]
 	[ValidateNotNullOrEmpty()]
-	[String]$LocalDirectory,
-    [parameter(Position=4,Mandatory=$true,ValueFromPipeline=$true,HelpMessage="Name of Git branch to build.")]
-	[ValidateNotNullOrEmpty()]
-	[String]$BranchToBuild,
-	[parameter(Position=5,Mandatory=$true,ValueFromPipeline=$true,HelpMessage="Path to zip file containing logs.")]
-	[ValidateNotNullOrEmpty()]
-	[String]$LogsPackagePath
+	[String]$ServicesBranch = 'branch-automation-refactoring'
+
 )
 
-. ".\GitProxy.ps1"
-. ".\Builder.ps1"
+# Import helper scripts
+. "$PSSCriptRoot\Tools.ps1"
+. "$PSSCriptRoot\GitProxy.ps1"
+. "$PSSCriptRoot\Builder.ps1"
+. "$PSSCriptRoot\MailSender.ps1"
 
+# Initialization
 Clear-Host
+#Tools-CreateDirectoryIfNotExists $LogsDirectory
 
-#GitProxy-GetRepository $GitRepositoryPath $LocalDirectory $BranchToBuild
-$BranchConfigurationPath = Join-Path $LocalDirectory $BranchConfigurationFileName
-$buildLogFile = "C:\GitHub\AXA\buildLogs\BranchBuild.log"
-#$buildLogFile = Builder-BuildSolutions $BranchConfigurationPath $LogsPath $LocalDirectory
-#GitProxy-CommitChanges $BranchConfigurationPath $LocalDirectory
+# Retrieve repositories
+$GitDownloadLog = (Join-Path $LogsDirectory 'GitDownload.log')
+$ApplicationsRoot = (Join-Path $LocalDirectory 'axa-applications')
+$ServicesRoot = (Join-Path $LocalDirectory 'axa-services')
+#Start-Transcript -Path $GitDownloadLog -Force
+#GitProxy-GetRepository "$($GitRepositoryRoot)axa-applications.git" $ApplicationsRoot $ApplicationsBranch
+#GitProxy-GetRepository "$($GitRepositoryRoot)axa-services.git" $ServicesRoot $ServicesBranch
+#Stop-Transcript
 
+# Build code
+$BuildLogFile = (Join-Path $LogsDirectory 'Build.log')
+
+# Build axa-applications
+#Start-Transcript -Path $BuildLogFile -Force
+#Builder-BuildSolutions "$ApplicationsRoot/BranchBuildConfiguration.xml" $ApplicationsRoot $LogsDirectory $BuildLogFile
+#Stop-Transcript
+
+# Commit changes
+$GitCommitLog = (Join-Path $LogsDirectory 'GitCommit.log')
+#Start-Transcript -Path $GitCommitLog -Force -Append
+#GitProxy-CommitChanges "$ApplicationsRoot/BranchBuildConfiguration.xml" $ApplicationsRoot
+#GitProxy-CommitChanges "$ServicesRoot/BranchBuildConfiguration.xml" $ServicesRoot
+#Stop-Transcript
+
+$LogsPackagePath = "$LogsDirectory.zip"
 If (Test-Path $LogsPackagePath)
 {
 	Remove-Item $LogsPackagePath
 }
 
 Add-Type -A System.IO.Compression.FileSystem
-[IO.Compression.ZipFile]::CreateFromDirectory($LogsPath, $LogsPackagePath)
+[IO.Compression.ZipFile]::CreateFromDirectory($LogsDirectory, $LogsPackagePath)
 
-./MailSender.ps1 `
+
+# Send e-mail
+MailSender-SendMail `
 	-Sender "Łukasz Nowakowski <lukasz.nowakowski@axadirect-solutions.pl>" `
 	-To (,"Łukasz Nowakowski <lukasz.nowakowski@axadirect-solutions.pl>") `
 	-Subject "Report from building of branch $BranchToBuild" `
@@ -46,14 +70,3 @@ Add-Type -A System.IO.Compression.FileSystem
 	-MailServer "mail.axadirect-solutions.pl" `
 	-IsBodyHtml $false `
 	-Attachments (,$LogsPackagePath)
-# Write-Host $buildLogFile
-# $text = Get-Content $buildLogFile -Raw
-# $subject = "Report from building of branch $BranchToBuild"
-# Send-MailMessage `
-	# -Attachments $LogsPackagePath `
-	# -Body $text `
-	# -DeliveryNotificationOption OnFailure `
-	# -From lukasz.nowakowski@axadirect-solutions.pl `
-	# -SmtpServer mail.axadirect-solutions.pl `
-	# -Subject $subject `
-	# -To lukasz.nowakowski@axadirect-solutions.pl

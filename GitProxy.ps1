@@ -23,14 +23,8 @@ function GitProxy-GetRepository {
 	Write-Host "	Directory removed"
 	
 	Write-Host "	Downloading repository"
-	git clone $RemotePath $LocalPath
+	git clone $RemotePath $LocalPath -b $Branch
 	
-	$currentLocation = Get-Location
-	Set-Location ($LocalPath)
-
-	Write-Host "Switching to branch $Branch"
-	git checkout $Branch
-	Set-Location $currentLocation
 	Write-Host ""
 	Write-Host ""
 }
