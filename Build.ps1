@@ -1,4 +1,4 @@
-param (
+﻿param (
     [parameter(Position=0,Mandatory=$true,ValueFromPipeline=$true,HelpMessage="Path to the Git repository.")]
 	[ValidateNotNullOrEmpty()]
 	[String]$GitRepositoryPath,
@@ -19,27 +19,17 @@ param (
 	[String]$LogsPackagePath
 )
 
-. ".\GitDownloader.ps1"
+. ".\GitProxy.ps1"
 . ".\Builder.ps1"
 
 Clear-Host
 
-GitDownloader-GetRepository $GitRepositoryPath $LocalDirectory $BranchToBuild
+#GitProxy-GetRepository $GitRepositoryPath $LocalDirectory $BranchToBuild
 $BranchConfigurationPath = Join-Path $LocalDirectory $BranchConfigurationFileName
-$buildLogFile = Builder-BuildSolutions $BranchConfigurationPath $LogsPath $LocalDirectory
+$buildLogFile = "C:\GitHub\AXA\buildLogs\BranchBuild.log"
+#$buildLogFile = Builder-BuildSolutions $BranchConfigurationPath $LogsPath $LocalDirectory
+#GitProxy-CommitChanges $BranchConfigurationPath $LocalDirectory
 
-$branchConfiguration = [xml](Get-Content $BranchConfigurationPath -Raw)
-
-$currentLocation = Get-Location
-Set-Location $LocalDirectory
-foreach($destination in $branchConfiguration.Branch.Solution.Output.Destination)
-{
-	git add $destination
-}
-
-git commit -m ("Commit of built performed on {0}" -f (Get-Date))
-
-Set-Location $currentLocation
 If (Test-Path $LogsPackagePath)
 {
 	Remove-Item $LogsPackagePath
@@ -47,14 +37,23 @@ If (Test-Path $LogsPackagePath)
 
 Add-Type -A System.IO.Compression.FileSystem
 [IO.Compression.ZipFile]::CreateFromDirectory($LogsPath, $LogsPackagePath)
-Write-Host $buildLogFile
-$text = Get-Content $buildLogFile -Raw
-$subject = "Report from building of branch $BranchToBuild"
-Send-MailMessage `
-	-Attachments $LogsPackagePath `
-	-Body $text `
-	-DeliveryNotificationOption OnFailure `
-	-From lukasz.nowakowski@axadirect-solutions.pl `
-	-SmtpServer mail.axadirect-solutions.pl `
-	-Subject $subject `
-	-To lukasz.nowakowski@axadirect-solutions.pl
+
+./MailSender.ps1 `
+	-Sender "Łukasz Nowakowski <lukasz.nowakowski@axadirect-solutions.pl>" `
+	-To (,"Łukasz Nowakowski <lukasz.nowakowski@axadirect-solutions.pl>") `
+	-Subject "Report from building of branch $BranchToBuild" `
+	-Body (Get-Content $buildLogFile -Raw) `
+	-MailServer "mail.axadirect-solutions.pl" `
+	-IsBodyHtml $false `
+	-Attachments (,$LogsPackagePath)
+# Write-Host $buildLogFile
+# $text = Get-Content $buildLogFile -Raw
+# $subject = "Report from building of branch $BranchToBuild"
+# Send-MailMessage `
+	# -Attachments $LogsPackagePath `
+	# -Body $text `
+	# -DeliveryNotificationOption OnFailure `
+	# -From lukasz.nowakowski@axadirect-solutions.pl `
+	# -SmtpServer mail.axadirect-solutions.pl `
+	# -Subject $subject `
+	# -To lukasz.nowakowski@axadirect-solutions.pl

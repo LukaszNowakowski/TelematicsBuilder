@@ -10,7 +10,7 @@ function RemovePathIfExists {
 }
 
 # Migrates changes from Git repository to TFS repository
-function GitDownloader-GetRepository {
+function GitProxy-GetRepository {
 	param (
 		[String]$RemotePath,
 		[String]$LocalPath,
@@ -33,4 +33,25 @@ function GitDownloader-GetRepository {
 	Set-Location $currentLocation
 	Write-Host ""
 	Write-Host ""
+}
+
+function GitProxy-CommitChanges {
+	param (
+		[String]$BranchConfigurationPath,
+		[String]$LocalDirectory
+	)
+
+	$branchConfiguration = [xml](Get-Content $BranchConfigurationPath -Raw)
+
+	$currentLocation = Get-Location
+	Set-Location $LocalDirectory
+	foreach($destination in $branchConfiguration.Branch.Solution.Output.Destination)
+	{
+		git add $destination
+	}
+
+	git commit -m ("Commit of built performed on {0}" -f (Get-Date))
+	# git push
+
+	Set-Location $currentLocation
 }
