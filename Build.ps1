@@ -17,56 +17,110 @@
 
 )
 
+function ResultsContainer {
+	param (
+		[Nullable[DateTime]]$StartDate,
+		[Nullable[DateTime]]$EndDate,
+		[Nullable[DateTime]]$GitDownloadStart,
+		[Nullable[DateTime]]$GitDownloadEnd,
+		[Nullable[DateTime]]$GitCommitStart,
+		[Nullable[DateTime]]$GitCommitEnd,
+		[PSObject]$BuildResults
+	)
+	
+	$result = New-Object PSObject | Select StartDate, EndDate, GitDownloadStart, GitDownloadEnd, GitCommitStart, GitCommitEnd, BuildResults
+	
+	$result.StartDate = $StartDate
+	$result.EndDate = $EndDate
+	$result.GitDownloadStart = $GitDownloadStart
+	$result.GitDownloadEnd = $GitDownloadEnd
+	$result.GitDownloadStart = $GitDownloadStart
+	$result.GitDownloadEnd = $GitDownloadEnd
+	$result.BuildResults = $BuildResults
+	
+	return $result
+}
+
+$operationsResult = ResultsContainer $null $null $null $null $null $null $null
+$applicationsRoot = (Join-Path $LocalDirectory 'axa-applications')
+$servicesRoot = (Join-Path $LocalDirectory 'axa-services')
+$htmlLogPath = ''
+$logsPackagePath = ''
+
 # Import helper scripts
 . "$PSSCriptRoot\Tools.ps1"
 . "$PSSCriptRoot\GitProxy.ps1"
 . "$PSSCriptRoot\Builder.ps1"
 . "$PSSCriptRoot\MailSender.ps1"
 
-# Initialization
-Clear-Host
-#Tools-CreateDirectoryIfNotExists $LogsDirectory
-
-# Retrieve repositories
-$GitDownloadLog = (Join-Path $LogsDirectory 'GitDownload.log')
-$ApplicationsRoot = (Join-Path $LocalDirectory 'axa-applications')
-$ServicesRoot = (Join-Path $LocalDirectory 'axa-services')
-#Start-Transcript -Path $GitDownloadLog -Force
-#GitProxy-GetRepository "$($GitRepositoryRoot)axa-applications.git" $ApplicationsRoot $ApplicationsBranch
-#GitProxy-GetRepository "$($GitRepositoryRoot)axa-services.git" $ServicesRoot $ServicesBranch
-#Stop-Transcript
-
-# Build code
-$BuildLogFile = (Join-Path $LogsDirectory 'Build.log')
-
-# Build axa-applications
-#Start-Transcript -Path $BuildLogFile -Force
-#Builder-BuildSolutions "$ApplicationsRoot/BranchBuildConfiguration.xml" $ApplicationsRoot $LogsDirectory $BuildLogFile
-#Stop-Transcript
-
-# Commit changes
-$GitCommitLog = (Join-Path $LogsDirectory 'GitCommit.log')
-#Start-Transcript -Path $GitCommitLog -Force -Append
-#GitProxy-CommitChanges "$ApplicationsRoot/BranchBuildConfiguration.xml" $ApplicationsRoot
-#GitProxy-CommitChanges "$ServicesRoot/BranchBuildConfiguration.xml" $ServicesRoot
-#Stop-Transcript
-
-$LogsPackagePath = "$LogsDirectory.zip"
-If (Test-Path $LogsPackagePath)
-{
-	Remove-Item $LogsPackagePath
+function Initialize {
+	Clear-Host
+	Tools-CreateDirectoryIfNotExists $LogsDirectory
 }
 
-Add-Type -A System.IO.Compression.FileSystem
-[IO.Compression.ZipFile]::CreateFromDirectory($LogsDirectory, $LogsPackagePath)
+function RetrieveRepositories {
+	$script:operationsResult.GitDownloadStart = Get-Date
+	$GitDownloadLog = (Join-Path $LogsDirectory 'GitDownload.log')
+	Start-Transcript -Path $GitDownloadLog -Force
+	GitProxy-GetRepository "$($GitRepositoryRoot)axa-applications.git" $script:applicationsRoot $ApplicationsBranch
+	GitProxy-GetRepository "$($GitRepositoryRoot)axa-services.git" $script:servicesRoot $ServicesBranch
+	$script:operationsResult.GitDownloadEnd = Get-Date
+	Stop-Transcript
+}
+	
+function BuildCode {
+	$BuildLogFile = (Join-Path $LogsDirectory 'Build.log')
+	Start-Transcript -Path $BuildLogFile -Force
+	$script:operationsResult.BuildResults = Builder-BuildSolutions "$($script:applicationsRoot)/BranchBuildConfiguration.xml" $script:applicationsRoot $LogsDirectory $BuildLogFile
+	Stop-Transcript
+}
 
+function CommitChanges {
+	# Commit changes
+	$script:operationsResult.GitCommitStart = Get-Date
+	$GitCommitLog = (Join-Path $LogsDirectory 'GitCommit.log')
+	Start-Transcript -Path $GitCommitLog -Force -Append
+	GitProxy-CommitChanges "$($script:applicationsRoot)/BranchBuildConfiguration.xml" $script:applicationsRoot
+	GitProxy-CommitChanges "$($script:servicesRoot)/BranchBuildConfiguration.xml" $script:servicesRoot
+	$script:operationsResult.GitCommitEnd = Get-Date
+	Stop-Transcript
+	$BuildEnd = Get-Date
+}
 
-# Send e-mail
-MailSender-SendMail `
-	-Sender "Łukasz Nowakowski <lukasz.nowakowski@axadirect-solutions.pl>" `
-	-To (,"Łukasz Nowakowski <lukasz.nowakowski@axadirect-solutions.pl>") `
-	-Subject "Report from building of branch $BranchToBuild" `
-	-Body (Get-Content $buildLogFile -Raw) `
-	-MailServer "mail.axadirect-solutions.pl" `
-	-IsBodyHtml $false `
-	-Attachments (,$LogsPackagePath)
+function CreateLogs {
+	$script:logsPackagePath = "$LogsDirectory.zip"
+	If (Test-Path $script:logsPackagePath)
+	{
+		Remove-Item $script:logsPackagePath
+	}
+
+	# Create report file
+	# $result = (ResultsContainer $BuildStart $BuildEnd $GitDownloadStart $GitDownloadEnd $GitCommitStart $GitCommitEnd $applicationsBuildResult)
+	$logXmlPath = (Join-Path $LogsDirectory 'Log.xml')
+	($script:operationsResult | ConvertTo-Xml -Depth 4 -NoTypeInformation).Save($logXmlPath)
+	$script:htmlLogPath = (Join-Path $LogsDirectory 'Log.html')
+	Tools-XsltTransform $logXmlPath $script:htmlLogPath
+
+	Add-Type -A System.IO.Compression.FileSystem
+	[IO.Compression.ZipFile]::CreateFromDirectory($LogsDirectory, $script:logsPackagePath)
+}
+
+function SendReport {
+	MailSender-SendMail `
+		-Sender "Łukasz Nowakowski <lukasz.nowakowski@axadirect-solutions.pl>" `
+		-To (,"Łukasz Nowakowski <lukasz.nowakowski@axadirect-solutions.pl>") `
+		-Subject "Report from building of branch $BranchToBuild" `
+		-Body (Get-Content $script:htmlLogPath -Raw) `
+		-MailServer "mail.axadirect-solutions.pl" `
+		-IsBodyHtml $true `
+		-Attachments (,$script:logsPackagePath)
+}
+
+$operationsResult.StartDate = Get-Date
+Initialize
+RetrieveRepositories
+BuildCode
+CommitChanges
+$operationsResult.EndDate = Get-Date
+CreateLogs
+SendReport

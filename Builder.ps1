@@ -1,5 +1,39 @@
 $MsBuildPath="C:\Program Files (x86)\MSBuild\12.0\Bin\MsBuild.exe"
 
+function Builder-SolutionBuildResult () {
+	param (
+		[String]$SolutionName,
+		[Boolean]$Succeeded
+	)
+	
+	$result = New-Object PSObject | Select-Object SolutionName, Succeeded
+	
+	$result.SolutionName = $SolutionName
+	$result.Succeeded = $Succeeded
+	
+	Return $result
+}
+
+function Builder-BuildResults() {
+	param (
+		[DateTime]$BuildStart,
+		[DateTime]$BuildEnd,
+		[Int]$Succeeded,
+		[Int]$Failed
+	)
+	
+	$result = New-Object PSObject | Select-Object BuildStart, BuildEnd, Succeeded, Failed, Solutions
+	
+	$result.BuildStart = $BuildStart
+	$result.BuildEnd = $BuildEnd
+	$result.Succeeded = $Succeeded
+	$result.Failed = $Failed
+	$result.Solutions = New-Object System.Collections.ArrayList
+	
+	Return $result
+}
+
+
 function Builder-LogFileLocation {
 	param (
 		[String]$SolutionName,
@@ -32,6 +66,8 @@ function Builder-BuildSolutions {
         [String]$BuildLog
 	)
 
+	$buildStart = Get-Date
+	$buildResults = (Builder-BuildResults $buildStart $buildStart 0 0)
 	$MsBuildLogs = (Join-Path $LogsDirectory "MsBuildLogs")
 	New-Item $MsBuildLogs -ItemType Directory > $null
 	$BranchConfiguration = [xml](Get-Content $ConfigurationFile)
@@ -44,10 +80,12 @@ function Builder-BuildSolutions {
 
     $successes = 0
     $failures = 0
+	$results
     [SystemCollections.ArrayList]$failedProjects = New-Object System.Collections.ArrayList
 	foreach ($solution in $BranchConfiguration.Branch.Solution)
 	{
 		$result = (Builder-BuildSolution "$BranchRoot/$($solution.Path)" $solution.Name $MsBuildLogs)
+		$buildResults.Solutions.Add((Builder-SolutionBuildResult $solution.Name $result))
 		if ($result)
 		{
             $successes++
@@ -86,4 +124,11 @@ function Builder-BuildSolutions {
             Write-Host "    $solution"
         }
     }
+	
+	$buildEnd = Get-Date
+	$buildResults.BuildStart = $buildStart
+	$buildResults.BuildEnd = $buildEnd
+	$buildResults.Succeeded = $successes
+	$buildResults.Failed = $failures
+	Return $buildResults
 }
