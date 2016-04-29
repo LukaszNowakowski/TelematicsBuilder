@@ -26,6 +26,9 @@ Name of branch of `axa-applications` project to work on.
 Name of branch of `axa-services` project to work on. Usually it will be the same as
 `ApplicationsBranch`.
 
+### LogsPersistencePath
+Path to directory, to store logs from builds.
+
 ## Description of process
 Script first retrieves `axa-applications` and `axa-services` repositories from Git. git command may
 require entry of credentials.
@@ -40,3 +43,10 @@ repository.
 
 Each step above logs its process to a file or files. When changes are commited and pushed, those
 logs are gathered and sent to defined e-mail address.
+
+Logs are then stored in requested location (by parameter LogsPersistencePath). Under directory
+defined there a structure of directories is created to make it easier to search specific log. On
+first level there are directories for each year in which process was executed. Under each year there
+are directories for months. Underneath there are log files that have names in structure:
+{%ApplicationsBranch%}_{%ServicesBranch%}_{%yyyy-MM-dd.HH-mm-ss%}.zip, where date is date of
+completion of operations.
