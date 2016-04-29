@@ -1,20 +1,22 @@
 ﻿param (
-    [parameter(Position=1,Mandatory=$false,ValueFromPipeline=$true,HelpMessage="Root path of repository.")]
-    [ValidateNotNullOrEmpty()]
-    [String]$GitRepositoryRoot = 'git@github.com:Operasoft/',
-    [parameter(Position=2,Mandatory=$false,ValueFromPipeline=$true,HelpMessage="Path to directory to store logs in.")]
+	[parameter(Position=1,Mandatory=$true,ValueFromPipeline=$true,HelpMessage="Root path of repository.")]
 	[ValidateNotNullOrEmpty()]
-	[String]$LogsDirectory = 'C:/GitHub/AXA/Logs',
-    [parameter(Position=3,Mandatory=$false,ValueFromPipeline=$true,HelpMessage="Path to local directory for download source code.")]
+	[String]$GitRepositoryRoot,
+	[parameter(Position=2,Mandatory=$true,ValueFromPipeline=$false,HelpMessage="Path to directory to store logs in.")]
 	[ValidateNotNullOrEmpty()]
-	[String]$LocalDirectory = 'C:/GitHub/AXA/BuildWorkspace',
-    [parameter(Position=4,Mandatory=$false,ValueFromPipeline=$true,HelpMessage="Name of axa-applications branch to build.")]
+	[String]$LogsDirectory,
+	[parameter(Position=3,Mandatory=$true,ValueFromPipeline=$false,HelpMessage="Path to local directory for download source code.")]
 	[ValidateNotNullOrEmpty()]
-	[String]$ApplicationsBranch = 'branch-automation-refactoring',
-    [parameter(Position=4,Mandatory=$false,ValueFromPipeline=$true,HelpMessage="Name of axa-services branch to build.")]
+	[String]$LocalDirectory,
+	[parameter(Position=4,Mandatory=$true,ValueFromPipeline=$false,HelpMessage="Name of axa-applications branch to build.")]
 	[ValidateNotNullOrEmpty()]
-	[String]$ServicesBranch = 'branch-automation-refactoring'
-
+	[String]$ApplicationsBranch,
+	[parameter(Position=4,Mandatory=$true,ValueFromPipeline=$false,HelpMessage="Name of axa-services branch to build.")]
+	[ValidateNotNullOrEmpty()]
+	[String]$ServicesBranch,
+	[parameter(Position=5,Mandatory=$true,ValueFromPipeline=$false,HelpMessage="Path to root directory for logs persistence.")]
+	[ValidateNotNullOrEmpty()]
+	[String]$LogsPersistencePath
 )
 
 function ResultsContainer {
@@ -116,6 +118,15 @@ function SendReport {
 		-Attachments (,$script:logsPackagePath)
 }
 
+function BackupLogs {
+	$logDirectory = ('{0}\{1}' -f (Get-Date -f yyyy), (Get-Date -f MM))
+	$logDirectory = (Join-Path $LogsPersistencePath $logDirectory)
+	Tools-CreateDirectoryIfNotExists $logDirectory $false
+	$newFileName = $ApplicationsBranch + '_' + $ServicesBranch + '_' + ('{0:yyyy-MM-dd.HH-mm-ss}' -f (Get-Date)) + [System.IO.Path]::GetExtension($script:logsPackagePath)
+	$newFileName = (Join-Path $logDirectory $newFileName)
+	Copy-Item $script:logsPackagePath $newFileName
+}
+
 $operationsResult.StartDate = Get-Date
 Initialize
 RetrieveRepositories
@@ -124,3 +135,4 @@ CommitChanges
 $operationsResult.EndDate = Get-Date
 CreateLogs
 SendReport
+BackupLogs

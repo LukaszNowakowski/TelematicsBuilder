@@ -1,13 +1,14 @@
 ﻿function Tools-CreateDirectoryIfNotExists {
 	param (
-		[String]$DirectoryPath
+		[String]$DirectoryPath,
+		[Boolean]$ClearIfExists = $true
 	)
 	
-	if (!(Test-Path $DirectoryPath))
+	If (!(Test-Path $DirectoryPath))
 	{
 		[void](New-Item -Path $DirectoryPath -ItemType Directory)
 	}
-    else
+    ElseIf ($ClearIfExists)
     {
         [void](Remove-Item -Path (Join-Path $DirectoryPath *) -Recurse -Force)
     }
