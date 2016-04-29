@@ -127,6 +127,12 @@ function BackupLogs {
 	Copy-Item $script:logsPackagePath $newFileName
 }
 
+function CleanUp {
+	Remove-Item $script:logsPackagePath -Force
+	Remove-Item $LogsDirectory -Recurse -Force
+	Remove-Item $LocalDirectory -Recurse -Force
+}
+
 $operationsResult.StartDate = Get-Date
 Initialize
 RetrieveRepositories
@@ -136,3 +142,4 @@ $operationsResult.EndDate = Get-Date
 CreateLogs
 SendReport
 BackupLogs
+CleanUp
