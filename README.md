@@ -48,7 +48,7 @@ Logs are then stored in requested location (by parameter LogsPersistencePath). U
 defined there a structure of directories is created to make it easier to search specific log. On
 first level there are directories for each year in which process was executed. Under each year there
 are directories for months. Underneath there are log files that have names in structure:
-{%ApplicationsBranch%}_{%ServicesBranch%}_{%yyyy-MM-dd.HH-mm-ss%}.zip, where date is date of
+{%ApplicationsBranch%}\_{%ServicesBranch%}\_{%yyyy-MM-dd.HH-mm-ss%}.zip, where date is date of
 completion of operations.
 
 When logs are backed up, next step of process removes all files created leaving only the back ups 
