@@ -64,7 +64,7 @@ function RetrieveRepositories {
 	$script:operationsResult.GitDownloadStart = Get-Date
 	$GitDownloadLog = (Join-Path $LogsDirectory 'GitDownload.log')
 	Start-Transcript -Path $GitDownloadLog -Force
-	GitProxy-GetRepository "$($GitRepositoryRoot)axa-applications.git" $script:applicationsRoot $ApplicationsBranch
+	# GitProxy-GetRepository "$($GitRepositoryRoot)axa-applications.git" $script:applicationsRoot $ApplicationsBranch
 	GitProxy-GetRepository "$($GitRepositoryRoot)axa-services.git" $script:servicesRoot $ServicesBranch
 	$script:operationsResult.GitDownloadEnd = Get-Date
 	Stop-Transcript
@@ -74,6 +74,9 @@ function BuildCode {
 	$BuildLogFile = (Join-Path $LogsDirectory 'Build.log')
 	Start-Transcript -Path $BuildLogFile -Force
 	$script:operationsResult.BuildResults = Builder-BuildSolutions "$($script:applicationsRoot)/BranchBuildConfiguration.xml" $script:applicationsRoot $LogsDirectory $BuildLogFile
+	Tools-CopyItems (Join-Path $script:applicationsRoot 'CRMEntities/bin/Release/*') (Join-Path $script:servicesRoot 'lib') 'CRMEntities.*'
+	Tools-CopyItems (Join-Path $script:applicationsRoot 'UBI.QS.Console/QS.Shared/bin/Release/*') (Join-Path $script:servicesRoot 'lib') 'QS.Shared.dll'
+	Tools-CopyItems (Join-Path $script:applicationsRoot 'UBI.Paybox.Shared/UBI.Paybox.Shared/bin/Release/*') (Join-Path $script:servicesRoot 'lib') 'UBI.Paybox.Shared.dll'
 	Stop-Transcript
 }
 
@@ -133,13 +136,13 @@ function CleanUp {
 	Remove-Item $LocalDirectory -Recurse -Force
 }
 
-$operationsResult.StartDate = Get-Date
-Initialize
-RetrieveRepositories
-BuildCode
+# $operationsResult.StartDate = Get-Date
+# Initialize
+# RetrieveRepositories
+# BuildCode
 CommitChanges
-$operationsResult.EndDate = Get-Date
-CreateLogs
-SendReport
-BackupLogs
-CleanUp
+# $operationsResult.EndDate = Get-Date
+# CreateLogs
+# SendReport
+# BackupLogs
+# CleanUp

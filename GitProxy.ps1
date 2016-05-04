@@ -39,9 +39,14 @@ function GitProxy-CommitChanges {
 
 	$currentLocation = Get-Location
 	Set-Location $LocalDirectory
-	foreach($destination in $branchConfiguration.Branch.Solution.Output.Destination)
+	foreach($destination in $branchConfiguration.Branch.Buildable.Solution.Output.Destination)
 	{
 		git add $destination
+	}
+	
+	foreach ($path in $branchConfiguration.Branch.External.Path)
+	{
+		git add $path
 	}
 
 	git commit -m ("Commit of built performed on {0}" -f (Get-Date))

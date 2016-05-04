@@ -24,3 +24,13 @@ function Tools-XsltTransform {
 	$xslt.Load("$PSSCriptRoot\Report.xsl");
 	$xslt.Transform($xml, $output);
 }
+
+function Tools-CopyItems {
+	param (
+		[String]$SourceDir,
+		[String]$TargetDir,
+		[String]$Filter
+	)
+	
+	Copy-Item $SourceDir $TargetDir -Filter $Filter -Recurse
+}

@@ -71,7 +71,7 @@ function Builder-BuildSolutions {
 	$MsBuildLogs = (Join-Path $LogsDirectory "MsBuildLogs")
 	New-Item $MsBuildLogs -ItemType Directory > $null
 	$BranchConfiguration = [xml](Get-Content $ConfigurationFile)
-	$repeats = $BranchConfiguration.Branch.Solution.Name | Group {$_} | Where-Object {$_.Count -gt 1} | measure | % {$_.Count}
+	$repeats = $BranchConfiguration.Branch.Buildable.Solution.Name | Group {$_} | Where-Object {$_.Count -gt 1} | measure | % {$_.Count}
 	if ($repeats -gt 0)
 	{
 		Write-Error "Solution names must be unique"
@@ -82,7 +82,7 @@ function Builder-BuildSolutions {
     $failures = 0
 	$results
     [SystemCollections.ArrayList]$failedProjects = New-Object System.Collections.ArrayList
-	foreach ($solution in $BranchConfiguration.Branch.Solution)
+	foreach ($solution in $BranchConfiguration.Branch.Buildable.Solution)
 	{
 		$result = (Builder-BuildSolution "$BranchRoot/$($solution.Path)" $solution.Name $MsBuildLogs)
 		$buildResults.Solutions.Add((Builder-SolutionBuildResult $solution.Name $result))
