@@ -64,7 +64,7 @@ function RetrieveRepositories {
 	$script:operationsResult.GitDownloadStart = Get-Date
 	$GitDownloadLog = (Join-Path $LogsDirectory 'GitDownload.log')
 	Start-Transcript -Path $GitDownloadLog -Force
-	# GitProxy-GetRepository "$($GitRepositoryRoot)axa-applications.git" $script:applicationsRoot $ApplicationsBranch
+	GitProxy-GetRepository "$($GitRepositoryRoot)axa-applications.git" $script:applicationsRoot $ApplicationsBranch
 	GitProxy-GetRepository "$($GitRepositoryRoot)axa-services.git" $script:servicesRoot $ServicesBranch
 	$script:operationsResult.GitDownloadEnd = Get-Date
 	Stop-Transcript
@@ -100,7 +100,6 @@ function CreateLogs {
 	}
 
 	# Create report file
-	# $result = (ResultsContainer $BuildStart $BuildEnd $GitDownloadStart $GitDownloadEnd $GitCommitStart $GitCommitEnd $applicationsBuildResult)
 	$logXmlPath = (Join-Path $LogsDirectory 'Log.xml')
 	($script:operationsResult | ConvertTo-Xml -Depth 4 -NoTypeInformation).Save($logXmlPath)
 	$script:htmlLogPath = (Join-Path $LogsDirectory 'Log.html')
@@ -136,13 +135,13 @@ function CleanUp {
 	Remove-Item $LocalDirectory -Recurse -Force
 }
 
-# $operationsResult.StartDate = Get-Date
-# Initialize
-# RetrieveRepositories
-# BuildCode
+$operationsResult.StartDate = Get-Date
+Initialize
+RetrieveRepositories
+BuildCode
 CommitChanges
-# $operationsResult.EndDate = Get-Date
-# CreateLogs
-# SendReport
-# BackupLogs
-# CleanUp
+$operationsResult.EndDate = Get-Date
+CreateLogs
+SendReport
+BackupLogs
+CleanUp

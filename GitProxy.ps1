@@ -42,15 +42,19 @@ function GitProxy-CommitChanges {
 	foreach($destination in $branchConfiguration.Branch.Buildable.Solution.Output.Destination)
 	{
 		git add $destination
+		Write-Host "Added $destination to source control"
 	}
 	
 	foreach ($path in $branchConfiguration.Branch.External.Path)
 	{
 		git add $path
+		Write-Host "Added $path to source control"
 	}
 
 	git commit -m ("Commit of built performed on {0}" -f (Get-Date))
+	Write-Host "Commited to local repository"
 	# git push
+	Write-Host "Pushed to remote repository"
 
 	Set-Location $currentLocation
 }
