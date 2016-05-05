@@ -53,7 +53,7 @@ function GitProxy-CommitChanges {
 
 	git commit -m ("Commit of built performed on {0}" -f (Get-Date))
 	Write-Host "Commited to local repository"
-	# git push
+	git push
 	Write-Host "Pushed to remote repository"
 
 	Set-Location $currentLocation

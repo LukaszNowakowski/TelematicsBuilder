@@ -11,10 +11,16 @@
 	[parameter(Position=4,Mandatory=$true,ValueFromPipeline=$false,HelpMessage="Name of axa-applications branch to build.")]
 	[ValidateNotNullOrEmpty()]
 	[String]$ApplicationsBranch,
-	[parameter(Position=4,Mandatory=$true,ValueFromPipeline=$false,HelpMessage="Name of axa-services branch to build.")]
+	[parameter(Position=5,Mandatory=$true,ValueFromPipeline=$false,HelpMessage="Name of axa-services branch to build.")]
 	[ValidateNotNullOrEmpty()]
 	[String]$ServicesBranch,
-	[parameter(Position=5,Mandatory=$true,ValueFromPipeline=$false,HelpMessage="Path to root directory for logs persistence.")]
+	[parameter(Position=6,Mandatory=$true,ValueFromPipeline=$false,HelpMessage="Name of axa-bin-scheduler branch to build.")]
+	[ValidateNotNullOrEmpty()]
+	[String]$SchedulerBranch,
+	[parameter(Position=7,Mandatory=$true,ValueFromPipeline=$false,HelpMessage="Name of axa-bin-wwwroot branch to build.")]
+	[ValidateNotNullOrEmpty()]
+	[String]$WwwBranch,
+	[parameter(Position=8,Mandatory=$true,ValueFromPipeline=$false,HelpMessage="Path to root directory for logs persistence.")]
 	[ValidateNotNullOrEmpty()]
 	[String]$LogsPersistencePath
 )
@@ -27,10 +33,11 @@ function ResultsContainer {
 		[Nullable[DateTime]]$GitDownloadEnd,
 		[Nullable[DateTime]]$GitCommitStart,
 		[Nullable[DateTime]]$GitCommitEnd,
-		[PSObject]$BuildResults
+		[PSObject]$BuildResults,
+		[PSObject]$PublishResults
 	)
 	
-	$result = New-Object PSObject | Select StartDate, EndDate, GitDownloadStart, GitDownloadEnd, GitCommitStart, GitCommitEnd, BuildResults
+	$result = New-Object PSObject | Select StartDate, EndDate, GitDownloadStart, GitDownloadEnd, GitCommitStart, GitCommitEnd, BuildResults, PublishResults
 	
 	$result.StartDate = $StartDate
 	$result.EndDate = $EndDate
@@ -39,13 +46,16 @@ function ResultsContainer {
 	$result.GitDownloadStart = $GitDownloadStart
 	$result.GitDownloadEnd = $GitDownloadEnd
 	$result.BuildResults = $BuildResults
+	$result.PublishResults = $PublishResults
 	
 	return $result
 }
 
-$operationsResult = ResultsContainer $null $null $null $null $null $null $null
+$operationsResult = ResultsContainer $null $null $null $null $null $null $null, $null
 $applicationsRoot = (Join-Path $LocalDirectory 'axa-applications')
 $servicesRoot = (Join-Path $LocalDirectory 'axa-services')
+$schedulerRoot = (Join-Path $LocalDirectory 'axa-bin-scheduler')
+$wwwRoot = (Join-Path $LocalDirectory 'axa-bin-wwwroot')
 $htmlLogPath = ''
 $logsPackagePath = ''
 
@@ -66,6 +76,8 @@ function RetrieveRepositories {
 	Start-Transcript -Path $GitDownloadLog -Force
 	GitProxy-GetRepository "$($GitRepositoryRoot)axa-applications.git" $script:applicationsRoot $ApplicationsBranch
 	GitProxy-GetRepository "$($GitRepositoryRoot)axa-services.git" $script:servicesRoot $ServicesBranch
+	GitProxy-GetRepository "$($GitRepositoryRoot)axa-bin-scheduler.git" $script:schedulerRoot $SchedulerBranch
+	GitProxy-GetRepository "$($GitRepositoryRoot)axa-bin-wwwroot.git" $script:wwwRoot $WwwBranch
 	$script:operationsResult.GitDownloadEnd = Get-Date
 	Stop-Transcript
 }
@@ -77,6 +89,14 @@ function BuildCode {
 	Tools-CopyItems (Join-Path $script:applicationsRoot 'CRMEntities/bin/Release/*') (Join-Path $script:servicesRoot 'lib') 'CRMEntities.*'
 	Tools-CopyItems (Join-Path $script:applicationsRoot 'UBI.QS.Console/QS.Shared/bin/Release/*') (Join-Path $script:servicesRoot 'lib') 'QS.Shared.dll'
 	Tools-CopyItems (Join-Path $script:applicationsRoot 'UBI.Paybox.Shared/UBI.Paybox.Shared/bin/Release/*') (Join-Path $script:servicesRoot 'lib') 'UBI.Paybox.Shared.dll'
+	Stop-Transcript
+}
+
+function Publish {
+	$BuildLogFile = (Join-Path $LogsDirectory 'Publish.log')
+	Start-Transcript -Path $BuildLogFile -Force
+	$script:operationsResult.PublishResults = Builder-PublishSolutions "$($script:applicationsRoot)/BranchBuildConfiguration.xml" $script:applicationsRoot $LogsDirectory $BuildLogFile $script:schedulerRoot $script:wwwRoot	
+	$script:operationsResult.PublishResults = Builder-PublishSolutions "$($script:servicesRoot)/BranchBuildConfiguration.xml" $script:servicesRoot $LogsDirectory $BuildLogFile $script:schedulerRoot $script:wwwRoot	
 	Stop-Transcript
 }
 
@@ -139,6 +159,7 @@ $operationsResult.StartDate = Get-Date
 Initialize
 RetrieveRepositories
 BuildCode
+Publish
 CommitChanges
 $operationsResult.EndDate = Get-Date
 CreateLogs

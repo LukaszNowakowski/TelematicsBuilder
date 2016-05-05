@@ -69,7 +69,7 @@ function Builder-BuildSolutions {
 	$buildStart = Get-Date
 	$buildResults = (Builder-BuildResults $buildStart $buildStart 0 0)
 	$MsBuildLogs = (Join-Path $LogsDirectory "MsBuildLogs")
-	New-Item $MsBuildLogs -ItemType Directory > $null
+	Tools-CreateDirectoryIfNotExists $MsBuildLogs
 	$BranchConfiguration = [xml](Get-Content $ConfigurationFile)
 	$repeats = $BranchConfiguration.Branch.Buildable.Solution.Name | Group {$_} | Where-Object {$_.Count -gt 1} | measure | % {$_.Count}
 	if ($repeats -gt 0)
@@ -131,4 +131,112 @@ function Builder-BuildSolutions {
 	$buildResults.Succeeded = $successes
 	$buildResults.Failed = $failures
 	Return $buildResults
+}
+
+function Builder-PublishSolution {
+	param (
+		[String]$ProjectPath,
+		[String]$ProjectName,
+		[String]$LogDirectory,
+		[String]$OutputDirectory,
+		[String]$Mode
+	)
+	
+	Write-Host "Publishing $ProjectPath"
+	& $MsBuildPath $ProjectPath /t:Clean /p:Configuration=Release /verbosity:quiet > $null
+	$tempPath = "$($env:temp)/TempPublish"
+	$buildResult = $true
+	If ($Mode -eq "Publish")
+	{
+		$params = "/fileLoggerParameters:LogFile=$(Builder-LogFileLocation $ProjectName $LogDirectory);Verbosity=quiet;Encoding=UTF-8"
+		& $MsBuildPath $ProjectPath /t:Rebuild /p:Configuration=Release /p:DeployOnBuild=true /p:CreatePackageOnPublish=false /p:OutDir=$tempPath /t:ResolveReferences /fileLogger $params > $null
+		$result = $LastExitCode
+		If (!($result -Eq 0))
+		{
+			$buildResult = $false
+		}
+		Else
+		{
+			Write-Host "$tempPath/_PublishedWebsites/$ProjectName"
+			Remove-Item "$tempPath/_PublishedWebsites/$ProjectName" -Include "*.config" -Recurse -Force
+			Copy-Item "$tempPath/_PublishedWebsites/$ProjectName/*" $OutputDirectory -Recurse -Force
+			$buildResult = $true
+		}
+	}
+	ElseIf ($Mode -eq "CopyOutput")
+	{
+		Write-Host "Copy outputs"
+		$params = "/fileLoggerParameters:LogFile=$(Builder-LogFileLocation $ProjectName $LogDirectory);Verbosity=quiet;Encoding=UTF-8"
+		& $MsBuildPath $ProjectPath /t:Rebuild /p:Configuration=Release /p:OutputPath=$tempPath /fileLogger $params > $null
+		$result = $LastExitCode
+		If (!($result -Eq 0))
+		{
+			$buildResult = $false
+		}
+		Else
+		{
+			Remove-Item "$tempPath" -Include "*.config" -Recurse -Force
+			Copy-Item "$tempPath/*" $OutputDirectory -Recurse -Force
+			$buildResult = $true
+		}
+	}
+
+	Remove-Item $tempPath/* -Force -Recurse
+	Return $buildResult
+}
+
+function Builder-PublishSolutions {
+	param (
+		[String]$ConfigurationFile,
+		[String]$BranchRoot,
+		[String]$LogsDirectory,
+        [String]$PublishLog,
+		[String]$SchedulerRoot,
+		[String]$WwwRoot
+	)
+
+	$buildStart = Get-Date
+	$publishResults = (Builder-BuildResults $buildStart $buildStart 0 0)
+	$MsBuildLogs = (Join-Path $LogsDirectory "MsBuildLogs")
+	Tools-CreateDirectoryIfNotExists $MsBuildLogs $false
+	$BranchConfiguration = [xml](Get-Content $ConfigurationFile)
+	$repeats = $BranchConfiguration.Branch.Buildable.Solution.Name | Group {$_} | Where-Object {$_.Count -gt 1} | measure | % {$_.Count}
+	if ($repeats -gt 0)
+	{
+		Write-Error "Solution names must be unique"
+		Return $False;
+	}
+
+    $successes = 0
+    $failures = 0
+	$results
+    [SystemCollections.ArrayList]$failedProjects = New-Object System.Collections.ArrayList
+	$succeeded = 0
+	$failures = 0
+	foreach ($solution in $BranchConfiguration.Branch.Buildable.Solution)
+	{
+		foreach ($project in $solution.PublishedProjects.Project)
+		{
+			$projectPath = (Get-ChildItem $BranchRoot -Recurse -Include "*.csproj" | Where-Object {$_.Name -eq "$($project.Name).csproj"} | Select-Object -First 1).FullName
+			$outputDirectory = If ($project.Repository -eq "Scheduler") { $SchedulerRoot } Else { $WwwRoot }
+			$outputDirectory = (Join-Path $outputDirectory ($project.TargetDirectory))
+			$publishResult = Builder-PublishSolution $projectPath ($project.Name) $LogsDirectory $outputDirectory ($project.Mode)
+			$publishResults.Solutions.Add((Builder-SolutionBuildResult $project.Name $publishResult))
+			If ($publishResult)
+			{
+				$successes++
+			}
+			Else
+			{
+				$failures++
+			}
+		}
+	}
+
+	$buildEnd = Get-Date
+	$publishResults.BuildStart = $buildStart
+	$publishResults.BuildEnd = $buildEnd
+	$publishResults.Succeeded = $successes
+	$publishResults.Failed = $failures
+	Return $publishResults
 }

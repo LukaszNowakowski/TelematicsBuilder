@@ -198,7 +198,80 @@ table td {
 				</xsl:for-each>
 			</tbody>
 		</table>
-	</body>
+		<h2>Publish report</h2>
+		<table class="statistics" cellspacing="0">
+			<colgroup>
+				<col style="width: 60%" />
+				<col />
+			</colgroup>
+			<tr>
+				<td class="itemDescription">
+					Publish start date:
+				</td>
+				<td class="itemId">
+					<xsl:value-of select="Objects/Object/Property[@Name='PublishResults']/Property/Property[@Name='BuildStart']" />
+				</td>
+			</tr>
+			<tr>
+				<td class="itemDescription">
+					Build end date:
+				</td>
+				<td class="itemId">
+					<xsl:value-of select="Objects/Object/Property[@Name='PublishResults']/Property/Property[@Name='BuildEnd']" />
+				</td>
+			</tr>
+			<tr>
+				<td class="itemDescription">
+					Failed builds:
+				</td>
+				<td class="itemId">
+					<xsl:value-of select="Objects/Object/Property[@Name='PublishResults']/Property/Property[@Name='Failed']" />
+				</td>
+			</tr>
+			<tr>
+				<td class="itemDescription">
+					Succeeded builds:
+				</td>
+				<td class="itemId">
+					<xsl:value-of select="Objects/Object/Property[@Name='PublishResults']/Property/Property[@Name='Succeeded']" />
+				</td>
+			</tr>
+		</table>
+		<div style="height: 30px;">
+			<xsl:text disable-output-escaping="yes"><![CDATA[&nbsp;]]></xsl:text>
+		</div>
+		<table class="resultsTable" cellspacing="0">
+			<colgroup>
+				<col style="width: 10%;" />
+				<col style="width: 60%;" />
+				<col />
+			</colgroup>
+			<thead>
+				<tr>
+					<th>Id</th>
+					<th>Solution</th>
+					<th>Publish result</th>
+				</tr>
+			</thead>
+			<tbody>
+				<xsl:for-each select="Objects/Object/Property[@Name='PublishResults']/Property/Property[@Name='Solutions']/Property">
+					<xsl:element name="tr">
+						<xsl:if test="Property[@Name='Succeeded'] = 'False'">
+							<xsl:attribute name="class">error</xsl:attribute>
+						</xsl:if>
+						<td class="itemId"><xsl:value-of select="position()" /></td>
+						<td class="itemDescription"><xsl:value-of select="Property[@Name='SolutionName']" /></td>
+						<td class="itemStatus">
+							<xsl:choose>
+								<xsl:when test="Property[@Name='Succeeded'] = 'True'">Succeeded</xsl:when>
+								<xsl:when test="Property[@Name='Succeeded'] = 'False'">Failed</xsl:when>
+							</xsl:choose>
+						</td>
+					</xsl:element>
+				</xsl:for-each>
+			</tbody>
+		</table>
+		</body>
 </html>
 </xsl:template>
 </xsl:stylesheet>
