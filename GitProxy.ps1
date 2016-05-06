@@ -35,20 +35,26 @@ function GitProxy-CommitChanges {
 		[String]$LocalDirectory
 	)
 
-	$branchConfiguration = [xml](Get-Content $BranchConfigurationPath -Raw)
-
 	$currentLocation = Get-Location
 	Set-Location $LocalDirectory
-	foreach($destination in $branchConfiguration.Branch.Buildable.Solution.Output.Destination)
+	If (!!$BranchConfigurationPath)
 	{
-		git add $destination
-		Write-Host "Added $destination to source control"
+		$branchConfiguration = [xml](Get-Content $BranchConfigurationPath -Raw)
+		foreach($destination in $branchConfiguration.Branch.Buildable.Solution.Output.Destination)
+		{
+			git add $destination
+			Write-Host "Added $destination to source control"
+		}
+		
+		foreach ($path in $branchConfiguration.Branch.External.Path)
+		{
+			git add $path
+			Write-Host "Added $path to source control"
+		}
 	}
-	
-	foreach ($path in $branchConfiguration.Branch.External.Path)
+	Else
 	{
-		git add $path
-		Write-Host "Added $path to source control"
+		git add (Join-Path $LocalDirectory "*")
 	}
 
 	git commit -m ("Commit of built performed on {0}" -f (Get-Date))

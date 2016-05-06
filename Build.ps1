@@ -107,6 +107,8 @@ function CommitChanges {
 	Start-Transcript -Path $GitCommitLog -Force -Append
 	GitProxy-CommitChanges "$($script:applicationsRoot)/BranchBuildConfiguration.xml" $script:applicationsRoot
 	GitProxy-CommitChanges "$($script:servicesRoot)/BranchBuildConfiguration.xml" $script:servicesRoot
+	GitProxy-CommitChanges "" $script:schedulerRoot
+	GitProxy-CommitChanges "" $script:wwwRoot
 	$script:operationsResult.GitCommitEnd = Get-Date
 	Stop-Transcript
 	$BuildEnd = Get-Date

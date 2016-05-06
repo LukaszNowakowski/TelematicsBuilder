@@ -142,7 +142,6 @@ function Builder-PublishSolution {
 		[String]$Mode
 	)
 	
-	Write-Host "Publishing $ProjectPath"
 	& $MsBuildPath $ProjectPath /t:Clean /p:Configuration=Release /verbosity:quiet > $null
 	$tempPath = "$($env:temp)/TempPublish"
 	$buildResult = $true
@@ -157,7 +156,6 @@ function Builder-PublishSolution {
 		}
 		Else
 		{
-			Write-Host "$tempPath/_PublishedWebsites/$ProjectName"
 			Remove-Item "$tempPath/_PublishedWebsites/$ProjectName" -Include "*.config" -Recurse -Force
 			Copy-Item "$tempPath/_PublishedWebsites/$ProjectName/*" $OutputDirectory -Recurse -Force
 			$buildResult = $true
@@ -165,7 +163,6 @@ function Builder-PublishSolution {
 	}
 	ElseIf ($Mode -eq "CopyOutput")
 	{
-		Write-Host "Copy outputs"
 		$params = "/fileLoggerParameters:LogFile=$(Builder-LogFileLocation $ProjectName $LogDirectory);Verbosity=quiet;Encoding=UTF-8"
 		& $MsBuildPath $ProjectPath /t:Rebuild /p:Configuration=Release /p:OutputPath=$tempPath /fileLogger $params > $null
 		$result = $LastExitCode
@@ -197,7 +194,7 @@ function Builder-PublishSolutions {
 
 	$buildStart = Get-Date
 	$publishResults = (Builder-BuildResults $buildStart $buildStart 0 0)
-	$MsBuildLogs = (Join-Path $LogsDirectory "MsBuildLogs")
+	$MsBuildLogs = (Join-Path $LogsDirectory "PublishLogs")
 	Tools-CreateDirectoryIfNotExists $MsBuildLogs $false
 	$BranchConfiguration = [xml](Get-Content $ConfigurationFile)
 	$repeats = $BranchConfiguration.Branch.Buildable.Solution.Name | Group {$_} | Where-Object {$_.Count -gt 1} | measure | % {$_.Count}
@@ -217,10 +214,10 @@ function Builder-PublishSolutions {
 	{
 		foreach ($project in $solution.PublishedProjects.Project)
 		{
-			$projectPath = (Get-ChildItem $BranchRoot -Recurse -Include "*.csproj" | Where-Object {$_.Name -eq "$($project.Name).csproj"} | Select-Object -First 1).FullName
+			$projectPath = (Join-Path $BranchRoot $project.Path)
 			$outputDirectory = If ($project.Repository -eq "Scheduler") { $SchedulerRoot } Else { $WwwRoot }
 			$outputDirectory = (Join-Path $outputDirectory ($project.TargetDirectory))
-			$publishResult = Builder-PublishSolution $projectPath ($project.Name) $LogsDirectory $outputDirectory ($project.Mode)
+			$publishResult = Builder-PublishSolution $projectPath ($project.Name) $MsBuildLogs $outputDirectory ($project.Mode)
 			$publishResults.Solutions.Add((Builder-SolutionBuildResult $project.Name $publishResult))
 			If ($publishResult)
 			{
