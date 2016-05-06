@@ -80,17 +80,15 @@ function Builder-BuildSolutions {
 
     $successes = 0
     $failures = 0
-	$results
     [SystemCollections.ArrayList]$failedProjects = New-Object System.Collections.ArrayList
 	foreach ($solution in $BranchConfiguration.Branch.Buildable.Solution)
 	{
 		$result = (Builder-BuildSolution "$BranchRoot/$($solution.Path)" $solution.Name $MsBuildLogs)
-		$buildResults.Solutions.Add((Builder-SolutionBuildResult $solution.Name $result))
+		$buildResults.Solutions.Add((Builder-SolutionBuildResult $solution.Name $result)) > $null
 		if ($result)
 		{
             $successes++
 			Write-Host "Build for solution $($solution.Name) succeeded"
-			Remove-Item (Builder-LogFileLocation $solution.Name $MsBuildLogs) -Force
 			foreach ($output in $solution.Output)
 			{
 				foreach ($pattern in $output.Pattern)
@@ -109,21 +107,7 @@ function Builder-BuildSolutions {
             [void]$failedProjects.Add($solution.Path)
 			Write-Host "Build for solution $($solution.Name) failed"
 		}
-		
-		Write-Host ""
 	}
-
-    Write-Host "Build $($successes + $failures) projects"
-    Write-Host "$successes succeeded"
-    Write-Host "$failures failed"
-    if ($failures -gt 0)
-    {
-        Write-Host "Failed projects:"
-        foreach ($solution in $failedProjects)
-        {
-            Write-Host "    $solution"
-        }
-    }
 	
 	$buildEnd = Get-Date
 	$buildResults.BuildStart = $buildStart
@@ -179,6 +163,15 @@ function Builder-PublishSolution {
 	}
 
 	Remove-Item $tempPath/* -Force -Recurse
+	If ($buildResult)
+	{
+		Write-Host "Publish for solution $ProjectName succeeded"
+	}
+	Else
+	{
+		Write-Host "Publish for solution $ProjectName failed"
+	}
+	
 	Return $buildResult
 }
 
@@ -206,7 +199,6 @@ function Builder-PublishSolutions {
 
     $successes = 0
     $failures = 0
-	$results
     [SystemCollections.ArrayList]$failedProjects = New-Object System.Collections.ArrayList
 	$succeeded = 0
 	$failures = 0
@@ -218,7 +210,7 @@ function Builder-PublishSolutions {
 			$outputDirectory = If ($project.Repository -eq "Scheduler") { $SchedulerRoot } Else { $WwwRoot }
 			$outputDirectory = (Join-Path $outputDirectory ($project.TargetDirectory))
 			$publishResult = Builder-PublishSolution $projectPath ($project.Name) $MsBuildLogs $outputDirectory ($project.Mode)
-			$publishResults.Solutions.Add((Builder-SolutionBuildResult $project.Name $publishResult))
+			$publishResults.Solutions.Add((Builder-SolutionBuildResult $project.Name $publishResult)) > $null
 			If ($publishResult)
 			{
 				$successes++

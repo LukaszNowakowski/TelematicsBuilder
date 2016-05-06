@@ -89,6 +89,23 @@ function BuildCode {
 	Tools-CopyItems (Join-Path $script:applicationsRoot 'CRMEntities/bin/Release/*') (Join-Path $script:servicesRoot 'lib') 'CRMEntities.*'
 	Tools-CopyItems (Join-Path $script:applicationsRoot 'UBI.QS.Console/QS.Shared/bin/Release/*') (Join-Path $script:servicesRoot 'lib') 'QS.Shared.dll'
 	Tools-CopyItems (Join-Path $script:applicationsRoot 'UBI.Paybox.Shared/UBI.Paybox.Shared/bin/Release/*') (Join-Path $script:servicesRoot 'lib') 'UBI.Paybox.Shared.dll'
+	$temp = Builder-BuildSolutions "$($script:servicesRoot)/BranchBuildConfiguration.xml" $script:servicesRoot $LogsDirectory $BuildLogFile
+	Tools-AddResults $script:operationsResult.BuildResults $temp
+    Write-Host "Built $($script:operationsResult.BuildResults.Succeeded + $script:operationsResult.BuildResults.Failed) projects"
+    Write-Host "$($script:operationsResult.BuildResults.Succeeded) succeeded"
+    Write-Host "$($script:operationsResult.BuildResults.Failed) failed"
+    if ($failures -gt 0)
+    {
+        Write-Host "Failed projects:"
+        foreach ($solution in $script:operationsResult.BuildResults.Solutions)
+        {
+			If (!($solution.Succeeded))
+			{
+				Write-Host "    $solution"
+			}
+        }
+    }
+
 	Stop-Transcript
 }
 
@@ -96,7 +113,22 @@ function Publish {
 	$BuildLogFile = (Join-Path $LogsDirectory 'Publish.log')
 	Start-Transcript -Path $BuildLogFile -Force
 	$script:operationsResult.PublishResults = Builder-PublishSolutions "$($script:applicationsRoot)/BranchBuildConfiguration.xml" $script:applicationsRoot $LogsDirectory $BuildLogFile $script:schedulerRoot $script:wwwRoot	
-	$script:operationsResult.PublishResults = Builder-PublishSolutions "$($script:servicesRoot)/BranchBuildConfiguration.xml" $script:servicesRoot $LogsDirectory $BuildLogFile $script:schedulerRoot $script:wwwRoot	
+	$temp = Builder-PublishSolutions "$($script:servicesRoot)/BranchBuildConfiguration.xml" $script:servicesRoot $LogsDirectory $BuildLogFile $script:schedulerRoot $script:wwwRoot	
+	Tools-AddResults $script:operationsResult.PublishResults $temp
+    Write-Host "Published $($script:operationsResult.PublishResults.Succeeded + $script:operationsResult.PublishResults.Failed) projects"
+    Write-Host "$($script:operationsResult.PublishResults.Succeeded) succeeded"
+    Write-Host "$($script:operationsResult.PublishResults.Failed) failed"
+    if ($failures -gt 0)
+    {
+        Write-Host "Failed projects:"
+        foreach ($solution in $script:operationsResult.PublishResults.Solutions)
+        {
+			If (!($solution.Succeeded))
+			{
+				Write-Host "    $solution"
+			}
+        }
+    }
 	Stop-Transcript
 }
 

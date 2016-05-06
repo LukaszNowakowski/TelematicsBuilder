@@ -34,3 +34,15 @@ function Tools-CopyItems {
 	
 	Copy-Item $SourceDir $TargetDir -Filter $Filter -Recurse
 }
+
+function Tools-AddResults {
+	param (
+		[PSObject]$To,
+		[PSObject]$From
+	)
+
+	$To.BuildEnd = $From.BuildEnd
+	$To.Succeeded += $From.Succeeded
+	$To.Failed += $From.Failed
+	$To.Solutions.AddRange($From.Solutions)
+}

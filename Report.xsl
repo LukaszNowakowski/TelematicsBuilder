@@ -136,7 +136,7 @@ table td {
 					Build start date:
 				</td>
 				<td class="itemId">
-					<xsl:value-of select="Objects/Object/Property[@Name='BuildResults']/Property/Property[@Name='BuildStart']" />
+					<xsl:value-of select="Objects/Object/Property[@Name='BuildResults']/Property[@Name='BuildStart']" />
 				</td>
 			</tr>
 			<tr>
@@ -144,7 +144,7 @@ table td {
 					Build end date:
 				</td>
 				<td class="itemId">
-					<xsl:value-of select="Objects/Object/Property[@Name='BuildResults']/Property/Property[@Name='BuildEnd']" />
+					<xsl:value-of select="Objects/Object/Property[@Name='BuildResults']/Property[@Name='BuildEnd']" />
 				</td>
 			</tr>
 			<tr>
@@ -152,7 +152,7 @@ table td {
 					Failed builds:
 				</td>
 				<td class="itemId">
-					<xsl:value-of select="Objects/Object/Property[@Name='BuildResults']/Property/Property[@Name='Failed']" />
+					<xsl:value-of select="Objects/Object/Property[@Name='BuildResults']/Property[@Name='Failed']" />
 				</td>
 			</tr>
 			<tr>
@@ -160,7 +160,7 @@ table td {
 					Succeeded builds:
 				</td>
 				<td class="itemId">
-					<xsl:value-of select="Objects/Object/Property[@Name='BuildResults']/Property/Property[@Name='Succeeded']" />
+					<xsl:value-of select="Objects/Object/Property[@Name='BuildResults']/Property[@Name='Succeeded']" />
 				</td>
 			</tr>
 		</table>
@@ -181,7 +181,7 @@ table td {
 				</tr>
 			</thead>
 			<tbody>
-				<xsl:for-each select="Objects/Object/Property[@Name='BuildResults']/Property/Property[@Name='Solutions']/Property">
+				<xsl:for-each select="Objects/Object/Property[@Name='BuildResults']/Property[@Name='Solutions']/Property">
 					<xsl:element name="tr">
 						<xsl:if test="Property[@Name='Succeeded'] = 'False'">
 							<xsl:attribute name="class">error</xsl:attribute>
@@ -209,7 +209,7 @@ table td {
 					Publish start date:
 				</td>
 				<td class="itemId">
-					<xsl:value-of select="Objects/Object/Property[@Name='PublishResults']/Property/Property[@Name='BuildStart']" />
+					<xsl:value-of select="Objects/Object/Property[@Name='PublishResults']/Property[@Name='BuildStart']" />
 				</td>
 			</tr>
 			<tr>
@@ -217,7 +217,7 @@ table td {
 					Build end date:
 				</td>
 				<td class="itemId">
-					<xsl:value-of select="Objects/Object/Property[@Name='PublishResults']/Property/Property[@Name='BuildEnd']" />
+					<xsl:value-of select="Objects/Object/Property[@Name='PublishResults']/Property[@Name='BuildEnd']" />
 				</td>
 			</tr>
 			<tr>
@@ -225,7 +225,7 @@ table td {
 					Failed builds:
 				</td>
 				<td class="itemId">
-					<xsl:value-of select="Objects/Object/Property[@Name='PublishResults']/Property/Property[@Name='Failed']" />
+					<xsl:value-of select="Objects/Object/Property[@Name='PublishResults']/Property[@Name='Failed']" />
 				</td>
 			</tr>
 			<tr>
@@ -233,7 +233,7 @@ table td {
 					Succeeded builds:
 				</td>
 				<td class="itemId">
-					<xsl:value-of select="Objects/Object/Property[@Name='PublishResults']/Property/Property[@Name='Succeeded']" />
+					<xsl:value-of select="Objects/Object/Property[@Name='PublishResults']/Property[@Name='Succeeded']" />
 				</td>
 			</tr>
 		</table>
@@ -254,7 +254,7 @@ table td {
 				</tr>
 			</thead>
 			<tbody>
-				<xsl:for-each select="Objects/Object/Property[@Name='PublishResults']/Property/Property[@Name='Solutions']/Property">
+				<xsl:for-each select="Objects/Object/Property[@Name='PublishResults']/Property[@Name='Solutions']/Property">
 					<xsl:element name="tr">
 						<xsl:if test="Property[@Name='Succeeded'] = 'False'">
 							<xsl:attribute name="class">error</xsl:attribute>
