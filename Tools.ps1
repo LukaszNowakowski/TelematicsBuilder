@@ -14,6 +14,14 @@
     }
 }
 
+function Tools-ParentDirectory {
+	param (
+		[String]$FilePath
+	)
+	
+	Return (Get-Item $FilePath).DirectoryName
+}
+
 function Tools-XsltTransform {
 	param (
 		$xml,

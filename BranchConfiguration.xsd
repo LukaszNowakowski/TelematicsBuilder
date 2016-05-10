@@ -47,6 +47,7 @@
                   </xs:sequence>
                   <xs:attribute type="xs:string" name="Path" use="required" />
                   <xs:attribute type="xs:string" name="Name" use="required" />
+                  <xs:attribute type="xs:string" name="UnitTestsLibrary" use="optional" />
                 </xs:complexType>
               </xs:element>
             </xs:sequence>

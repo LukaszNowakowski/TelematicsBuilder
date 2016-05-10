@@ -84,7 +84,7 @@ function RetrieveRepositories {
 	
 function BuildCode {
 	$BuildLogFile = (Join-Path $LogsDirectory 'Build.log')
-	Start-Transcript -Path $BuildLogFile -Force
+	Start-Transcript -Path $BuildLogFile -Force > $null
 	$script:operationsResult.BuildResults = Builder-BuildSolutions "$($script:applicationsRoot)/BranchBuildConfiguration.xml" $script:applicationsRoot $LogsDirectory $BuildLogFile
 	Tools-CopyItems (Join-Path $script:applicationsRoot 'CRMEntities/bin/Release/*') (Join-Path $script:servicesRoot 'lib') 'CRMEntities.*'
 	Tools-CopyItems (Join-Path $script:applicationsRoot 'UBI.QS.Console/QS.Shared/bin/Release/*') (Join-Path $script:servicesRoot 'lib') 'QS.Shared.dll'
@@ -94,55 +94,64 @@ function BuildCode {
     Write-Host "Built $($script:operationsResult.BuildResults.Succeeded + $script:operationsResult.BuildResults.Failed) projects"
     Write-Host "$($script:operationsResult.BuildResults.Succeeded) succeeded"
     Write-Host "$($script:operationsResult.BuildResults.Failed) failed"
-    if ($failures -gt 0)
+	$success = $true
+    if ($script:operationsResult.BuildResults.Failed -gt 0)
     {
         Write-Host "Failed projects:"
         foreach ($solution in $script:operationsResult.BuildResults.Solutions)
         {
 			If (!($solution.Succeeded))
 			{
-				Write-Host "    $solution"
+				Write-Host "    $($solution.SolutionName) - Build: $($solution.CodeBuilt) - Tests: $($solution.UnitTestsPassed)"
 			}
         }
+		
+		$success = $false
     }
 
-	Stop-Transcript
+	Stop-Transcript > $null
+	Return $success
 }
 
 function Publish {
 	$BuildLogFile = (Join-Path $LogsDirectory 'Publish.log')
-	Start-Transcript -Path $BuildLogFile -Force
+	Start-Transcript -Path $BuildLogFile -Force > $null
 	$script:operationsResult.PublishResults = Builder-PublishSolutions "$($script:applicationsRoot)/BranchBuildConfiguration.xml" $script:applicationsRoot $LogsDirectory $BuildLogFile $script:schedulerRoot $script:wwwRoot	
 	$temp = Builder-PublishSolutions "$($script:servicesRoot)/BranchBuildConfiguration.xml" $script:servicesRoot $LogsDirectory $BuildLogFile $script:schedulerRoot $script:wwwRoot	
 	Tools-AddResults $script:operationsResult.PublishResults $temp
     Write-Host "Published $($script:operationsResult.PublishResults.Succeeded + $script:operationsResult.PublishResults.Failed) projects"
     Write-Host "$($script:operationsResult.PublishResults.Succeeded) succeeded"
     Write-Host "$($script:operationsResult.PublishResults.Failed) failed"
-    if ($failures -gt 0)
+	$success = $true
+    if ($script:operationsResult.PublishResults.Failed -gt 0)
     {
         Write-Host "Failed projects:"
         foreach ($solution in $script:operationsResult.PublishResults.Solutions)
         {
 			If (!($solution.Succeeded))
 			{
-				Write-Host "    $solution"
+				Write-Host "    $($solution.SolutionName)"
 			}
         }
+
+		$success = $false
     }
-	Stop-Transcript
+
+	Stop-Transcript > $null
+	Return $success
 }
 
 function CommitChanges {
 	# Commit changes
 	$script:operationsResult.GitCommitStart = Get-Date
 	$GitCommitLog = (Join-Path $LogsDirectory 'GitCommit.log')
-	Start-Transcript -Path $GitCommitLog -Force -Append
+	Start-Transcript -Path $GitCommitLog -Force -Append > $null
 	GitProxy-CommitChanges "$($script:applicationsRoot)/BranchBuildConfiguration.xml" $script:applicationsRoot
 	GitProxy-CommitChanges "$($script:servicesRoot)/BranchBuildConfiguration.xml" $script:servicesRoot
 	GitProxy-CommitChanges "" $script:schedulerRoot
 	GitProxy-CommitChanges "" $script:wwwRoot
 	$script:operationsResult.GitCommitEnd = Get-Date
-	Stop-Transcript
+	Stop-Transcript > $null
 	$BuildEnd = Get-Date
 }
 
@@ -192,9 +201,16 @@ function CleanUp {
 $operationsResult.StartDate = Get-Date
 Initialize
 RetrieveRepositories
-BuildCode
-Publish
-CommitChanges
+$result = BuildCode
+If ($result)
+{
+	$result = Publish
+	If ($result)
+	{
+		CommitChanges
+	}
+}
+
 $operationsResult.EndDate = Get-Date
 CreateLogs
 SendReport

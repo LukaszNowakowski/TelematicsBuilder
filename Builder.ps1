@@ -1,14 +1,19 @@
 $MsBuildPath="C:\Program Files (x86)\MSBuild\12.0\Bin\MsBuild.exe"
+$MsTestPath="C:\Program Files (x86)\Microsoft Visual Studio 12.0\Common7\IDE\MSTest.exe"
 
 function Builder-SolutionBuildResult () {
 	param (
 		[String]$SolutionName,
+		[Boolean]$CodeBuilt,
+		[Boolean]$UnitTestsPassed,
 		[Boolean]$Succeeded
 	)
 	
-	$result = New-Object PSObject | Select-Object SolutionName, Succeeded
+	$result = New-Object PSObject | Select-Object SolutionName, CodeBuilt, UnitTestsPassed, Succeeded
 	
 	$result.SolutionName = $SolutionName
+	$result.CodeBuilt = $CodeBuilt
+	$result.UnitTestsPassed = $UnitTestsPassed
 	$result.Succeeded = $Succeeded
 	
 	Return $result
@@ -48,14 +53,26 @@ function Builder-BuildSolution {
 	param (
 		[String]$SolutionPath,
 		[String]$SolutionName,
-		[String]$LogDirectory
+		[String]$LogDirectory,
+		[String]$TestsLibrary
 	)
 	
 	& $MsBuildPath $SolutionPath /t:Clean /p:Configuration=Release /verbosity:quiet > $null
 	$params = "/fileLoggerParameters:LogFile=$(Builder-LogFileLocation $SolutionName $LogDirectory);Verbosity=quiet;Encoding=UTF-8"
 	& $MsBuildPath $SolutionPath /t:Rebuild /p:Configuration=Release /fileLogger $params > $null
+	$codeBuilt = ($LastExitCode -Eq 0)
 	$result = $LastExitCode
-	Return $result -Eq 0
+	$unitTestsPassed = $true
+	If (!($TestsLibrary -Eq ''))
+	{
+		$testsResultsDirectory = (Join-Path $LogDirectory ($solutionName + "Tests"))
+		Tools-CreateDirectoryIfNotExists $testsResultsDirectory
+		$resultsFile = (Join-Path $testsResultsDirectory 'TestResults.trx')
+		& $MsTestPath /testcontainer:$TestsLibrary /resultsfile:$resultsFile > $null
+		$unitTestsPassed = ($LastExitCode -Eq 0)
+	}
+	
+	Return (Builder-SolutionBuildResult $SolutionName $codeBuilt $unitTestsPassed ($codeBuilt -And $unitTestsPassed))
 }
 
 function Builder-BuildSolutions {
@@ -69,7 +86,7 @@ function Builder-BuildSolutions {
 	$buildStart = Get-Date
 	$buildResults = (Builder-BuildResults $buildStart $buildStart 0 0)
 	$MsBuildLogs = (Join-Path $LogsDirectory "MsBuildLogs")
-	Tools-CreateDirectoryIfNotExists $MsBuildLogs
+	Tools-CreateDirectoryIfNotExists $MsBuildLogs $false
 	$BranchConfiguration = [xml](Get-Content $ConfigurationFile)
 	$repeats = $BranchConfiguration.Branch.Buildable.Solution.Name | Group {$_} | Where-Object {$_.Count -gt 1} | measure | % {$_.Count}
 	if ($repeats -gt 0)
@@ -83,11 +100,22 @@ function Builder-BuildSolutions {
     [SystemCollections.ArrayList]$failedProjects = New-Object System.Collections.ArrayList
 	foreach ($solution in $BranchConfiguration.Branch.Buildable.Solution)
 	{
-		$result = (Builder-BuildSolution "$BranchRoot/$($solution.Path)" $solution.Name $MsBuildLogs)
-		$buildResults.Solutions.Add((Builder-SolutionBuildResult $solution.Name $result)) > $null
-		if ($result)
+		$unitTestsLibrary = ''
+		If (!($solution.UnitTestsLibrary -Eq '') -And !($solution.UnitTestsLibrary -Eq $null))
 		{
-            $successes++
+			$unitTestsLibrary = (Join-Path $BranchRoot $solution.UnitTestsLibrary)
+		}
+		
+		$result = `
+			Builder-BuildSolution `
+				"$BranchRoot/$($solution.Path)" `
+				$solution.Name `
+				$MsBuildLogs `
+				$unitTestsLibrary
+		$buildResults.Solutions.Add($result) > $null
+		if ($result.Succeeded)
+		{
+			$successes++
 			Write-Host "Build for solution $($solution.Name) succeeded"
 			foreach ($output in $solution.Output)
 			{
@@ -210,7 +238,7 @@ function Builder-PublishSolutions {
 			$outputDirectory = If ($project.Repository -eq "Scheduler") { $SchedulerRoot } Else { $WwwRoot }
 			$outputDirectory = (Join-Path $outputDirectory ($project.TargetDirectory))
 			$publishResult = Builder-PublishSolution $projectPath ($project.Name) $MsBuildLogs $outputDirectory ($project.Mode)
-			$publishResults.Solutions.Add((Builder-SolutionBuildResult $project.Name $publishResult)) > $null
+			$publishResults.Solutions.Add((Builder-SolutionBuildResult $project.Name $true $true $publishResult)) > $null
 			If ($publishResult)
 			{
 				$successes++

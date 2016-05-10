@@ -124,123 +124,141 @@ table td {
 				<td class="itemId">
 					<xsl:value-of select="Objects/Object/Property[@Name='GitCommitEnd']" />
 				</td>
-			</tr>		</table>
-		<h2>Build report</h2>
-		<table class="statistics" cellspacing="0">
-			<colgroup>
-				<col style="width: 60%" />
-				<col />
-			</colgroup>
-			<tr>
-				<td class="itemDescription">
-					Build start date:
-				</td>
-				<td class="itemId">
-					<xsl:value-of select="Objects/Object/Property[@Name='BuildResults']/Property[@Name='BuildStart']" />
-				</td>
-			</tr>
-			<tr>
-				<td class="itemDescription">
-					Build end date:
-				</td>
-				<td class="itemId">
-					<xsl:value-of select="Objects/Object/Property[@Name='BuildResults']/Property[@Name='BuildEnd']" />
-				</td>
-			</tr>
-			<tr>
-				<td class="itemDescription">
-					Failed builds:
-				</td>
-				<td class="itemId">
-					<xsl:value-of select="Objects/Object/Property[@Name='BuildResults']/Property[@Name='Failed']" />
-				</td>
-			</tr>
-			<tr>
-				<td class="itemDescription">
-					Succeeded builds:
-				</td>
-				<td class="itemId">
-					<xsl:value-of select="Objects/Object/Property[@Name='BuildResults']/Property[@Name='Succeeded']" />
-				</td>
 			</tr>
 		</table>
-		<div style="height: 30px;">
-			<xsl:text disable-output-escaping="yes"><![CDATA[&nbsp;]]></xsl:text>
-		</div>
-		<table class="resultsTable" cellspacing="0">
-			<colgroup>
-				<col style="width: 10%;" />
-				<col style="width: 60%;" />
-				<col />
-			</colgroup>
-			<thead>
+		<xsl:if test="count(Objects/Object/Property[@Name='BuildResults']/Property) > 0">
+			<h2>Build report</h2>
+			<table class="statistics" cellspacing="0">
+				<colgroup>
+					<col style="width: 60%" />
+					<col />
+				</colgroup>
 				<tr>
-					<th>Id</th>
-					<th>Solution</th>
-					<th>Build result</th>
+					<td class="itemDescription">
+						Build start date:
+					</td>
+					<td class="itemId">
+						<xsl:value-of select="Objects/Object/Property[@Name='BuildResults']/Property[@Name='BuildStart']" />
+					</td>
 				</tr>
-			</thead>
-			<tbody>
-				<xsl:for-each select="Objects/Object/Property[@Name='BuildResults']/Property[@Name='Solutions']/Property">
-					<xsl:element name="tr">
-						<xsl:if test="Property[@Name='Succeeded'] = 'False'">
-							<xsl:attribute name="class">error</xsl:attribute>
-						</xsl:if>
-						<td class="itemId"><xsl:value-of select="position()" /></td>
-						<td class="itemDescription"><xsl:value-of select="Property[@Name='SolutionName']" /></td>
-						<td class="itemStatus">
-							<xsl:choose>
-								<xsl:when test="Property[@Name='Succeeded'] = 'True'">Succeeded</xsl:when>
-								<xsl:when test="Property[@Name='Succeeded'] = 'False'">Failed</xsl:when>
-							</xsl:choose>
-						</td>
-					</xsl:element>
-				</xsl:for-each>
-			</tbody>
-		</table>
-		<h2>Publish report</h2>
-		<table class="statistics" cellspacing="0">
-			<colgroup>
-				<col style="width: 60%" />
-				<col />
-			</colgroup>
-			<tr>
-				<td class="itemDescription">
-					Publish start date:
-				</td>
-				<td class="itemId">
-					<xsl:value-of select="Objects/Object/Property[@Name='PublishResults']/Property[@Name='BuildStart']" />
-				</td>
-			</tr>
-			<tr>
-				<td class="itemDescription">
-					Build end date:
-				</td>
-				<td class="itemId">
-					<xsl:value-of select="Objects/Object/Property[@Name='PublishResults']/Property[@Name='BuildEnd']" />
-				</td>
-			</tr>
-			<tr>
-				<td class="itemDescription">
-					Failed builds:
-				</td>
-				<td class="itemId">
-					<xsl:value-of select="Objects/Object/Property[@Name='PublishResults']/Property[@Name='Failed']" />
-				</td>
-			</tr>
-			<tr>
-				<td class="itemDescription">
-					Succeeded builds:
-				</td>
-				<td class="itemId">
-					<xsl:value-of select="Objects/Object/Property[@Name='PublishResults']/Property[@Name='Succeeded']" />
-				</td>
-			</tr>
-		</table>
-		<div style="height: 30px;">
-			<xsl:text disable-output-escaping="yes"><![CDATA[&nbsp;]]></xsl:text>
-		</div>
-		<table class="resultsTable" cellspacing="0">
+				<tr>
+					<td class="itemDescription">
+						Build end date:
+					</td>
+					<td class="itemId">
+						<xsl:value-of select="Objects/Object/Property[@Name='BuildResults']/Property[@Name='BuildEnd']" />
+					</td>
+				</tr>
+				<tr>
+					<td class="itemDescription">
+						Failed builds:
+					</td>
+					<td class="itemId">
+						<xsl:value-of select="Objects/Object/Property[@Name='BuildResults']/Property[@Name='Failed']" />
+					</td>
+				</tr>
+				<tr>
+					<td class="itemDescription">
+						Succeeded builds:
+					</td>
+					<td class="itemId">
+						<xsl:value-of select="Objects/Object/Property[@Name='BuildResults']/Property[@Name='Succeeded']" />
+					</td>
+				</tr>
+			</table>
+			<div style="height: 30px;">
+				<xsl:text disable-output-escaping="yes"><![CDATA[&nbsp;]]></xsl:text>
+			</div>
+			<table class="resultsTable" cellspacing="0">
+				<colgroup>
+					<col style="width: 10%;" />
+					<col style="width: 60%;" />
+					<col />
+				</colgroup>
+				<thead>
+					<tr>
+						<th>Id</th>
+						<th>Solution</th>
+						<th>Build result</th>
+						<th>Test result</th>
+						<th>Result</th>
+					</tr>
+				</thead>
+				<tbody>
+					<xsl:for-each select="Objects/Object/Property[@Name='BuildResults']/Property[@Name='Solutions']/Property">
+						<xsl:element name="tr">
+							<xsl:if test="Property[@Name='Succeeded'] = 'False'">
+								<xsl:attribute name="class">error</xsl:attribute>
+							</xsl:if>
+							<td class="itemId"><xsl:value-of select="position()" /></td>
+							<td class="itemDescription"><xsl:value-of select="Property[@Name='SolutionName']" /></td>
+							<td class="itemStatus">
+								<xsl:choose>
+									<xsl:when test="Property[@Name='CodeBuilt'] = 'True'">Succeeded</xsl:when>
+									<xsl:when test="Property[@Name='CodeBuilt'] = 'False'">Failed</xsl:when>
+								</xsl:choose>
+							</td>
+							<td class="itemStatus">
+								<xsl:choose>
+									<xsl:when test="Property[@Name='UnitTestsPassed'] = 'True'">Succeeded</xsl:when>
+									<xsl:when test="Property[@Name='UnitTestsPassed'] = 'False'">Failed</xsl:when>
+								</xsl:choose>
+							</td>
+							<td class="itemStatus">
+								<xsl:choose>
+									<xsl:when test="Property[@Name='Succeeded'] = 'True'">Succeeded</xsl:when>
+									<xsl:when test="Property[@Name='Succeeded'] = 'False'">Failed</xsl:when>
+								</xsl:choose>
+							</td>
+						</xsl:element>
+					</xsl:for-each>
+				</tbody>
+			</table>
+		</xsl:if>
+		<xsl:if test="count(Objects/Object/Property[@Name='PublishResults']/Property) > 0">
+			<h2>Publish report</h2>
+			<table class="statistics" cellspacing="0">
+				<colgroup>
+					<col style="width: 60%" />
+					<col />
+				</colgroup>
+				<tr>
+					<td class="itemDescription">
+						Publish start date:
+					</td>
+					<td class="itemId">
+						<xsl:value-of select="Objects/Object/Property[@Name='PublishResults']/Property[@Name='BuildStart']" />
+					</td>
+				</tr>
+				<tr>
+					<td class="itemDescription">
+						Build end date:
+					</td>
+					<td class="itemId">
+						<xsl:value-of select="Objects/Object/Property[@Name='PublishResults']/Property[@Name='BuildEnd']" />
+					</td>
+				</tr>
+				<tr>
+					<td class="itemDescription">
+						Failed builds:
+					</td>
+					<td class="itemId">
+						<xsl:value-of select="Objects/Object/Property[@Name='PublishResults']/Property[@Name='Failed']" />
+					</td>
+				</tr>
+				<tr>
+					<td class="itemDescription">
+						Succeeded builds:
+					</td>
+					<td class="itemId">
+						<xsl:value-of select="Objects/Object/Property[@Name='PublishResults']/Property[@Name='Succeeded']" />
+					</td>
+				</tr>
+			</table>
+			<div style="height: 30px;">
+				<xsl:text disable-output-escaping="yes"><![CDATA[&nbsp;]]></xsl:text>
+			</div>
+			<table class="resultsTable" cellspacing="0">
 			<colgroup>
 				<col style="width: 10%;" />
 				<col style="width: 60%;" />
@@ -271,7 +289,8 @@ table td {
 				</xsl:for-each>
 			</tbody>
 		</table>
-		</body>
+		</xsl:if>
+	</body>
 </html>
 </xsl:template>
 </xsl:stylesheet>
