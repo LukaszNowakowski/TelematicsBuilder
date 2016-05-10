@@ -173,14 +173,27 @@ function CreateLogs {
 }
 
 function SendReport {
-	MailSender-SendMail `
-		-Sender "Łukasz Nowakowski <lukasz.nowakowski@axadirect-solutions.pl>" `
-		-To (,"Łukasz Nowakowski <lukasz.nowakowski@axadirect-solutions.pl>") `
-		-Subject "Report from building of branch $BranchToBuild" `
-		-Body (Get-Content $script:htmlLogPath -Raw) `
-		-MailServer "mail.axadirect-solutions.pl" `
-		-IsBodyHtml $true `
-		-Attachments (,$script:logsPackagePath)
+	If ((Tools-FileSize $script:logsPackagePath) -gt 1Mb)
+	{
+		MailSender-SendMail `
+			-Sender "Łukasz Nowakowski <lukasz.nowakowski@axadirect-solutions.pl>" `
+			-To (,"Łukasz Nowakowski <lukasz.nowakowski@axadirect-solutions.pl>") `
+			-Subject "Report from building of branch $BranchToBuild" `
+			-Body (Get-Content $script:htmlLogPath -Raw) `
+			-MailServer "mail.axadirect-solutions.pl" `
+			-IsBodyHtml $true
+	}
+	Else
+	{
+		MailSender-SendMail `
+			-Sender "Łukasz Nowakowski <lukasz.nowakowski@axadirect-solutions.pl>" `
+			-To (,"Łukasz Nowakowski <lukasz.nowakowski@axadirect-solutions.pl>") `
+			-Subject "Report from building of branch $BranchToBuild" `
+			-Body (Get-Content $script:htmlLogPath -Raw) `
+			-MailServer "mail.axadirect-solutions.pl" `
+			-IsBodyHtml $true `
+			-Attachments (,$script:logsPackagePath)
+	}
 }
 
 function BackupLogs {

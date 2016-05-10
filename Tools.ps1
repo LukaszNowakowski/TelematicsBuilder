@@ -54,3 +54,11 @@ function Tools-AddResults {
 	$To.Failed += $From.Failed
 	$To.Solutions.AddRange($From.Solutions)
 }
+
+function Tools-FileSize {
+	param (
+		[String]$FilePath
+	)
+	
+	Return (Get-Item $FilePath).Length
+}

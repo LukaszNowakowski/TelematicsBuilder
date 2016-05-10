@@ -6,15 +6,26 @@ function MailSender-SendMail {
 		[String]$Body,
 		[String]$MailServer,
 		[Boolean]$IsBodyHtml,
-		[String[]]$Attachments
+		[String[]]$Attachments = @()
 	)
+
+	$messageParameters = @{
+		Subject = $Subject
+		Body = $Body
+		From = $Sender
+		To = $To
+		SmtpServer = $MailServer
+	}
+
+	if (!!($Attachments) -And $Attachments.Length -gt 0)
+	{
+		$messageParameters['Attachments'] = $Attachments
+	}
 
 	if ($IsBodyHtml)
 	{
-		Send-MailMessage -SmtpServer $MailServer -From $Sender -To $To -Subject $Subject -Body $Body -BodyAsHtml -Attachments $Attachments
+		$messageParameters['BodyAsHtml'] = $true
 	}
-	else
-	{
-		Send-MailMessage -SmtpServer $MailServer -From $Sender -To $To -Subject $Subject -Body $Body -Attachments $Attachments
-	}
+	
+	Send-MailMessage @messageParameters
 }
