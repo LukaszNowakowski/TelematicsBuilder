@@ -22,7 +22,13 @@
 	[String]$WwwBranch,
 	[parameter(Position=8,Mandatory=$true,ValueFromPipeline=$false,HelpMessage="Path to root directory for logs persistence.")]
 	[ValidateNotNullOrEmpty()]
-	[String]$LogsPersistencePath
+	[String]$LogsPersistencePath,
+	[parameter(Position=9,Mandatory=$true,ValueFromPipeline=$false,HelpMessage="Receiver address.")]
+	[ValidateNotNullOrEmpty()]
+	[String]$MailSender,
+	[parameter(Position=10,Mandatory=$true,ValueFromPipeline=$false,HelpMessage="Receiver address.")]
+	[ValidateNotNullOrEmpty()]
+	[String]$MailReceiver
 )
 
 function ResultsContainer {
@@ -176,8 +182,8 @@ function SendReport {
 	If ((Tools-FileSize $script:logsPackagePath) -gt 1Mb)
 	{
 		MailSender-SendMail `
-			-Sender "Łukasz Nowakowski <lukasz.nowakowski@axadirect-solutions.pl>" `
-			-To (,"Łukasz Nowakowski <lukasz.nowakowski@axadirect-solutions.pl>") `
+			-Sender $MailSender `
+			-To (,$MailReceiver) `
 			-Subject "Report from building of branch $BranchToBuild" `
 			-Body (Get-Content $script:htmlLogPath -Raw) `
 			-MailServer "mail.axadirect-solutions.pl" `
@@ -186,8 +192,8 @@ function SendReport {
 	Else
 	{
 		MailSender-SendMail `
-			-Sender "Łukasz Nowakowski <lukasz.nowakowski@axadirect-solutions.pl>" `
-			-To (,"Łukasz Nowakowski <lukasz.nowakowski@axadirect-solutions.pl>") `
+			-Sender $MailSender `
+			-To (,$MailReceiver) `
 			-Subject "Report from building of branch $BranchToBuild" `
 			-Body (Get-Content $script:htmlLogPath -Raw) `
 			-MailServer "mail.axadirect-solutions.pl" `
