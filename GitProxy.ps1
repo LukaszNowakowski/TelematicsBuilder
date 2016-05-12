@@ -5,7 +5,7 @@ function RemovePathIfExists {
 	)
 
 	if (Test-Path $Path) {
-		Remove-Item $Path -Force -Recurse
+		Remove-Item $Path -Force -Recurse -ErrorAction Stop
 	}
 }
 
@@ -17,16 +17,33 @@ function GitProxy-GetRepository {
 		[String]$Branch
 	)
 	
-	Write-Host "Downloading '$RemotePath'"
-	Write-Host "	Removing existing directory for download ($LocalPath)"
-	RemovePathIfExists $LocalPath
-	Write-Host "	Directory removed"
-	
-	Write-Host "	Downloading repository"
-	git clone $RemotePath $LocalPath -b $Branch
-	
-	Write-Host ""
-	Write-Host ""
+	Try
+	{
+		Write-Host "Downloading '$RemotePath'"
+		Write-Host "	Removing existing directory for download ($LocalPath)"
+		RemovePathIfExists $LocalPath
+		Write-Host "	Directory removed"
+		
+		Write-Host "	Downloading repository"
+		git clone $RemotePath $LocalPath -b $Branch
+		$result = $LastExitCode
+		If (!($result -eq 0))
+		{
+			Write-Host "Error downloading $RemotePath"
+		}
+		
+		Write-Host ""
+		Write-Host ""
+		Return $result -eq 0
+	}
+	Catch
+	{
+		Write-Host "Error details"
+		Write-Host "Source: $($_.Exception.Source)"
+		Write-Host "Message: $($_.Exception.Message)"
+		Write-Host "Target site:$($_.Exception.TargetSite)"
+		Return $false
+	}
 }
 
 function GitProxy-CommitChanges {

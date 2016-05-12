@@ -79,13 +79,22 @@ function Initialize {
 function RetrieveRepositories {
 	$script:operationsResult.GitDownloadStart = Get-Date
 	$GitDownloadLog = (Join-Path $LogsDirectory 'GitDownload.log')
-	Start-Transcript -Path $GitDownloadLog -Force
-	GitProxy-GetRepository "$($GitRepositoryRoot)axa-applications.git" $script:applicationsRoot $ApplicationsBranch
-	GitProxy-GetRepository "$($GitRepositoryRoot)axa-services.git" $script:servicesRoot $ServicesBranch
-	GitProxy-GetRepository "$($GitRepositoryRoot)axa-bin-scheduler.git" $script:schedulerRoot $SchedulerBranch
-	GitProxy-GetRepository "$($GitRepositoryRoot)axa-bin-wwwroot.git" $script:wwwRoot $WwwBranch
+	Start-Transcript -Path $GitDownloadLog -Force > $null
+	$result = $false
+	If ((GitProxy-GetRepository "$($GitRepositoryRoot)axa-applications.git" $script:applicationsRoot $ApplicationsBranch))
+	{
+		If ((GitProxy-GetRepository "$($GitRepositoryRoot)axa-services.git" $script:servicesRoot $ServicesBranch))
+		{
+			If ((GitProxy-GetRepository "$($GitRepositoryRoot)axa-bin-scheduler.git" $script:schedulerRoot $SchedulerBranch))
+			{
+				$result = GitProxy-GetRepository "$($GitRepositoryRoot)axa-bin-wwwroot.git" $script:wwwRoot $WwwBranch
+			}
+		}
+	}
+	
 	$script:operationsResult.GitDownloadEnd = Get-Date
-	Stop-Transcript
+	Stop-Transcript > $null
+	Return $result
 }
 	
 function BuildCode {
@@ -158,7 +167,6 @@ function CommitChanges {
 	GitProxy-CommitChanges "" $script:wwwRoot
 	$script:operationsResult.GitCommitEnd = Get-Date
 	Stop-Transcript > $null
-	$BuildEnd = Get-Date
 }
 
 function CreateLogs {
@@ -219,14 +227,14 @@ function CleanUp {
 
 $operationsResult.StartDate = Get-Date
 Initialize
-RetrieveRepositories
-$result = BuildCode
-If ($result)
+If (RetrieveRepositories)
 {
-	$result = Publish
-	If ($result)
+	If (BuildCode)
 	{
-		CommitChanges
+		If (Publish)
+		{
+			CommitChanges
+		}
 	}
 }
 
