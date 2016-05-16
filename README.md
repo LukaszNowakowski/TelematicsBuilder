@@ -38,7 +38,7 @@ Path to directory, to store logs from builds.
 ### MailSender
 Address to send report from. It can be in one of two forms:
 
-* "Display name <email address>"
+* "Display name &lt;email address&gt;"
 
 * "email address"
 
