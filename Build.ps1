@@ -26,9 +26,9 @@
 	[parameter(Position=9,Mandatory=$true,ValueFromPipeline=$false,HelpMessage="Receiver address.")]
 	[ValidateNotNullOrEmpty()]
 	[String]$MailSender,
-	[parameter(Position=10,Mandatory=$true,ValueFromPipeline=$false,HelpMessage="Receiver address.")]
+	[parameter(Position=10,Mandatory=$true,ValueFromPipeline=$false,HelpMessage="Receivers addresses.")]
 	[ValidateNotNullOrEmpty()]
-	[String]$MailReceiver
+	[String[]]$MailReceivers
 )
 
 function ResultsContainer {
@@ -191,7 +191,7 @@ function SendReport {
 	{
 		MailSender-SendMail `
 			-Sender $MailSender `
-			-To (,$MailReceiver) `
+			-To $MailReceivers `
 			-Subject "Report from building of branch $BranchToBuild" `
 			-Body (Get-Content $script:htmlLogPath -Raw) `
 			-MailServer "mail.axadirect-solutions.pl" `
@@ -201,7 +201,7 @@ function SendReport {
 	{
 		MailSender-SendMail `
 			-Sender $MailSender `
-			-To (,$MailReceiver) `
+			-To $MailReceivers `
 			-Subject "Report from building of branch $BranchToBuild" `
 			-Body (Get-Content $script:htmlLogPath -Raw) `
 			-MailServer "mail.axadirect-solutions.pl" `
@@ -242,4 +242,4 @@ $operationsResult.EndDate = Get-Date
 CreateLogs
 SendReport
 BackupLogs
-CleanUp
+# CleanUp
