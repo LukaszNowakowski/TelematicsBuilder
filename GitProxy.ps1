@@ -74,7 +74,7 @@ function GitProxy-CommitChanges {
 		git add (Join-Path $LocalDirectory "*")
 	}
 
-	git commit -m ("Commit of built performed on {0}" -f (Get-Date))
+	git commit -m ("Commit of build performed on {0}" -f (Get-Date))
 	Write-Host "Commited to local repository"
 	git push
 	Write-Host "Pushed to remote repository"
