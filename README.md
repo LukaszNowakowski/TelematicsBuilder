@@ -26,19 +26,42 @@ Name of branch of `axa-applications` project to work on.
 Name of branch of `axa-services` project to work on. Usually it will be the same as
 `ApplicationsBranch`.
 
+### SchedulerBranch
+Name of branch of `axa-bin-scheduler` project to work on.
+
+### WwwRoot
+Name of branch of `axa-bin-wwwroot` project to work on.
+
 ### LogsPersistencePath
 Path to directory, to store logs from builds.
+
+### MailSender
+Address to send report from. It can be in one of two forms:
+
+* "Display name <email address>"
+
+* "email address"
+
+Using first form should allow displaying friendly name in e-mail clients.
+
+### MailReceivers
+Array of addresses to send report to. Each entry can take any of the forms defined for `MailSender`
+parameter.
 
 ## Description of process
 Script first retrieves `axa-applications` and `axa-services` repositories from Git. git command may
 require entry of credentials.
 
-When code is downloaded, script builds all solutions in repository and copies outputs of builds to
-"lib" directories of solutions that need them. Information about what to copy where comes from
-predefined XML file containing all solutions to build and information about dependencies between
-them. Structure of this file is contained in `BranchConfiguration.xsd` file.
+When code is downloaded, script builds all solutions defined in branch configuration file  and
+copies outputs of builds to "lib" directories of solutions that need them. Information about what to
+copy where comes from predefined XML file containing all solutions to build and information about
+dependencies between them. Structure of this file is contained in `BranchConfiguration.xsd` file.
 
-After build is completed, changes made are commited to local branches and pushed to remote
+When build of all solutions succeeds, code is then deployed to `axa-bin-scheduler` and
+`axa-bin-wwwroot` repositories. Information about what to deploy where is also stored in XML branch
+configuration file.
+
+After "publish" is completed, changes made are commited to local branches and pushed to remote
 repository.
 
 Each step above logs its process to a file or files. When changes are commited and pushed, those
