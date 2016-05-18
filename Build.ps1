@@ -49,8 +49,8 @@ function ResultsContainer {
 	$result.EndDate = $EndDate
 	$result.GitDownloadStart = $GitDownloadStart
 	$result.GitDownloadEnd = $GitDownloadEnd
-	$result.GitDownloadStart = $GitDownloadStart
-	$result.GitDownloadEnd = $GitDownloadEnd
+	$result.GitCommitStart = $GitCommitStart
+	$result.GitCommitEnd = $GitCommitEnd
 	$result.BuildResults = $BuildResults
 	$result.PublishResults = $PublishResults
 	
