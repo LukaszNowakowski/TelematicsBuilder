@@ -26,8 +26,7 @@ function GitProxy-GetRepository {
 		
 		Write-Host "	Downloading repository"
 		git clone $RemotePath $LocalPath -b $Branch
-		$result = $LastExitCode
-		If (!($result -eq 0))
+		If (!($LastExitCode -eq 0))
 		{
 			Write-Host "Error downloading $RemotePath"
 		}
@@ -46,6 +45,7 @@ function GitProxy-GetRepository {
 	}
 }
 
+# Commits changes to remote repository.
 function GitProxy-CommitChanges {
 	param (
 		[String]$BranchConfigurationPath,
@@ -60,24 +60,67 @@ function GitProxy-CommitChanges {
 		foreach($destination in $branchConfiguration.Branch.Buildable.Solution.Output.Destination)
 		{
 			git add $destination
-			Write-Host "Added $destination to source control"
+			If (!($LastExitCode -eq 0))
+			{
+				Write-Host "$destination not staged for commit"
+				Return $false
+			}
+			Else
+			{
+				Write-Host "$destination staged for commit"
+			}
 		}
 		
 		foreach ($path in $branchConfiguration.Branch.External.Path)
 		{
 			git add $path
-			Write-Host "Added $path to source control"
+			If (!($LastExitCode -eq 0))
+			{
+				Write-Host "$path not staged for commit"
+				Return $false
+			}
+			Else
+			{
+				Write-Host "$path staged for commit"
+			}
 		}
 	}
 	Else
 	{
 		git add (Join-Path $LocalDirectory "*")
+		If (!($LastExitCode -eq 0))
+		{
+			Write-Host "$LocalDirectory not staged for commit"
+			Return $false
+		}
+		Else
+		{
+			Write-Host "$LocalDirectory staged for commit"
+		}
 	}
 
 	git commit -m ("Commit of build performed on {0}" -f (Get-Date))
-	Write-Host "Commited to local repository"
+	If (!($LastExitCode -eq 0))
+	{
+		Write-Host "Commit to local repository failed"
+		Return $false
+	}
+	Else
+	{
+		Write-Host "Commited to local repository"
+	}
+	
 	git push
-	Write-Host "Pushed to remote repository"
+	If (!($LastExitCode -eq 0))
+	{
+		Write-Host "Push to remote repository failed"
+		Return $false
+	}
+	Else
+	{
+		Write-Host "Pushed to remote repository"
+	}
 
 	Set-Location $currentLocation
+	Return $true
 }

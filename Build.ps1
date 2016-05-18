@@ -161,10 +161,39 @@ function CommitChanges {
 	$script:operationsResult.GitCommitStart = Get-Date
 	$GitCommitLog = (Join-Path $LogsDirectory 'GitCommit.log')
 	Start-Transcript -Path $GitCommitLog -Force -Append > $null
-	GitProxy-CommitChanges "$($script:applicationsRoot)/BranchBuildConfiguration.xml" $script:applicationsRoot
-	GitProxy-CommitChanges "$($script:servicesRoot)/BranchBuildConfiguration.xml" $script:servicesRoot
-	GitProxy-CommitChanges "" $script:schedulerRoot
-	GitProxy-CommitChanges "" $script:wwwRoot
+	If ((GitProxy-CommitChanges "$($script:applicationsRoot)/BranchBuildConfiguration.xml" $script:applicationsRoot))
+	{
+		Write-Host "Commit of 'axa-applications' completed"
+		If ((GitProxy-CommitChanges "$($script:servicesRoot)/BranchBuildConfiguration.xml" $script:servicesRoot))
+		{
+			Write-Host "Commit of 'axa-services' completed"
+			If ((GitProxy-CommitChanges "" $script:schedulerRoot))
+			{
+				Write-Host "Commit of 'axa-bin-scheduler' completed"
+				If ((GitProxy-CommitChanges "" $script:wwwRoot))
+				{
+					Write-Host "Commit of 'axa-bin-wwwroot' completed"
+				}
+				Else
+				{
+					Write-Host "Commit of 'axa-bin-wwwroot' failed"
+				}
+			}
+			Else
+			{
+				Write-Host "Commit of 'axa-bin-scheduler' failed"
+			}
+		}
+		Else
+		{
+			Write-Host "Commit of 'axa-services' failed"
+		}
+	}
+	Else
+	{
+		Write-Host "Commit of 'axa-applications' failed"
+	}
+	
 	$script:operationsResult.GitCommitEnd = Get-Date
 	Stop-Transcript > $null
 }
