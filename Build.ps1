@@ -242,4 +242,4 @@ $operationsResult.EndDate = Get-Date
 CreateLogs
 SendReport
 BackupLogs
-# CleanUp
+CleanUp
