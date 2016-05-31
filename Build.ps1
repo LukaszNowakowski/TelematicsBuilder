@@ -73,6 +73,7 @@ $logsPackagePath = ''
 
 function Initialize {
 	Clear-Host
+	Tools-CreateDirectoryIfNotExists $LocalDirectory
 	Tools-CreateDirectoryIfNotExists $LogsDirectory
 }
 
@@ -161,16 +162,16 @@ function CommitChanges {
 	$script:operationsResult.GitCommitStart = Get-Date
 	$GitCommitLog = (Join-Path $LogsDirectory 'GitCommit.log')
 	Start-Transcript -Path $GitCommitLog -Force -Append > $null
-	If ((GitProxy-CommitChanges "$($script:applicationsRoot)/BranchBuildConfiguration.xml" $script:applicationsRoot))
+	If ((GitProxy-CommitChanges "$($script:applicationsRoot)/BranchBuildConfiguration.xml" $script:applicationsRoot ("Commit of build performed on {0}" -f (Get-Date))))
 	{
 		Write-Host "Commit of 'axa-applications' completed"
-		If ((GitProxy-CommitChanges "$($script:servicesRoot)/BranchBuildConfiguration.xml" $script:servicesRoot))
+		If ((GitProxy-CommitChanges "$($script:servicesRoot)/BranchBuildConfiguration.xml" $script:servicesRoot ("Commit of build performed on {0}" -f (Get-Date))))
 		{
 			Write-Host "Commit of 'axa-services' completed"
-			If ((GitProxy-CommitChanges "" $script:schedulerRoot))
+			If ((GitProxy-CommitChanges "" $script:schedulerRoot ("Commit of build performed on {0}" -f (Get-Date))))
 			{
 				Write-Host "Commit of 'axa-bin-scheduler' completed"
-				If ((GitProxy-CommitChanges "" $script:wwwRoot))
+				If ((GitProxy-CommitChanges "" $script:wwwRoot ("Commit of build performed on {0}" -f (Get-Date))))
 				{
 					Write-Host "Commit of 'axa-bin-wwwroot' completed"
 				}

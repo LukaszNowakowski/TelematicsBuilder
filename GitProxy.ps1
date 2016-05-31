@@ -33,7 +33,7 @@ function GitProxy-GetRepository {
 		
 		Write-Host ""
 		Write-Host ""
-		Return $result -eq 0
+		Return $LastExitCode -eq 0
 	}
 	Catch
 	{
@@ -49,7 +49,8 @@ function GitProxy-GetRepository {
 function GitProxy-CommitChanges {
 	param (
 		[String]$BranchConfigurationPath,
-		[String]$LocalDirectory
+		[String]$LocalDirectory,
+		[String]$Comment
 	)
 
 	$currentLocation = Get-Location
@@ -99,7 +100,7 @@ function GitProxy-CommitChanges {
 		}
 	}
 
-	git commit -m ("Commit of build performed on {0}" -f (Get-Date))
+	git commit -m $Comment
 	If (!($LastExitCode -eq 0))
 	{
 		Write-Host "Commit to local repository failed"
@@ -123,4 +124,27 @@ function GitProxy-CommitChanges {
 
 	Set-Location $currentLocation
 	Return $true
+}
+
+function GitProxy-SetTag {
+	param (
+		[String]$RepositoryPath,
+		[String]$Version
+	)
+	
+	$currentLocation = Get-Location
+	Set-Location $RepositoryPath
+	git tag "v$Version"
+	Set-Location $currentLocation
+}
+
+function GitProxy-Push {
+	param (
+		[String]$RepositoryPath
+	)
+	
+	$currentLocation = Get-Location
+	Set-Location $RepositoryPath
+	git push
+	Set-Location $currentLocation
 }

@@ -1,0 +1,11 @@
+﻿.\Build.ps1 `
+	-GitRepositoryRoot 'git@github.com:Operasoft/' `
+	-LogsDirectory 'C:/TelematicsWorkspaces/buildLogs' `
+	-LocalDirectory 'C:/TelematicsWorkspaces/build' `
+	-ApplicationsBranch 'branch-automation-refactoring' `
+	-ServicesBranch 'branch-automation-refactoring' `
+	-SchedulerBranch 'branch-automation-refactoring' `
+	-WwwBranch 'branch-automation-refactoring' `
+	-LogsPersistencePath 'C:/TelematicsWorkspaces/Logs' `
+	-MailSender 'noreply@axadirect-solutions.pl' `
+	-MailReceiver (,'Łukasz Nowakowski <lukasz.nowakowski@axadirect-solutions.pl>')

@@ -1,10 +1,15 @@
 # TelematicsBuilder
 This is a set of scripts, that provide automation of build and deployment of Telematics project.
 
-At the moment scripts support building of code and copying built dependencies to target directories.
+Scripted activites are:
 
-## How to use
-Main script of the set is `Build.ps1`. It accepts multiple parameters, listed below
+* build code and copy build outputs to correct directories
+
+* publish applications to _publish_ respositories
+
+* set common version for all libraries
+
+## `Build.ps1`
 
 ### GitRepositoryRoot
 Path to Git's repository of organization hosting project. From location defined by this parameter
@@ -48,7 +53,7 @@ Using first form should allow displaying friendly name in e-mail clients.
 Array of addresses to send report to. Each entry can take any of the forms defined for `MailSender`
 parameter.
 
-## Description of process
+#### Description of process
 Script first retrieves `axa-applications` and `axa-services` repositories from Git. git command may
 require entry of credentials.
 
@@ -76,3 +81,19 @@ completion of operations.
 
 When logs are backed up, next step of process removes all files created leaving only the back ups 
 of the log.
+
+## `ChangeVersion.ps1`
+
+### GitRepositoryRoot
+Path to Git's repository of organization hosting project. From location defined by this parameter
+script will assume existence of repositories like `axa-applications` and `axa-services` and will
+proceed, as if they exist
+
+### RootDirectory
+Directory to store downloaded code temporarily.
+
+### NewVersion
+Version number to set for all libraries. It must be in format A.B.C.D.
+
+### BranchName
+Name of branch to download.
