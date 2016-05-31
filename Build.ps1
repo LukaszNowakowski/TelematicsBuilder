@@ -1,32 +1,32 @@
 ﻿param (
-	[parameter(Position=1,Mandatory=$true,ValueFromPipeline=$true,HelpMessage="Root path of repository.")]
+	[parameter(Mandatory=$true,HelpMessage="Root path of repository.")]
 	[ValidateNotNullOrEmpty()]
 	[String]$GitRepositoryRoot,
-	[parameter(Position=2,Mandatory=$true,ValueFromPipeline=$false,HelpMessage="Path to directory to store logs in.")]
+	[parameter(Mandatory=$true,HelpMessage="Path to directory to store logs in.")]
 	[ValidateNotNullOrEmpty()]
 	[String]$LogsDirectory,
-	[parameter(Position=3,Mandatory=$true,ValueFromPipeline=$false,HelpMessage="Path to local directory for download source code.")]
+	[parameter(Mandatory=$true,HelpMessage="Path to local directory for download source code.")]
 	[ValidateNotNullOrEmpty()]
 	[String]$LocalDirectory,
-	[parameter(Position=4,Mandatory=$true,ValueFromPipeline=$false,HelpMessage="Name of axa-applications branch to build.")]
+	[parameter(Mandatory=$true,HelpMessage="Name of axa-applications branch to build.")]
 	[ValidateNotNullOrEmpty()]
 	[String]$ApplicationsBranch,
-	[parameter(Position=5,Mandatory=$true,ValueFromPipeline=$false,HelpMessage="Name of axa-services branch to build.")]
+	[parameter(Mandatory=$true,HelpMessage="Name of axa-services branch to build.")]
 	[ValidateNotNullOrEmpty()]
 	[String]$ServicesBranch,
-	[parameter(Position=6,Mandatory=$true,ValueFromPipeline=$false,HelpMessage="Name of axa-bin-scheduler branch to build.")]
+	[parameter(Mandatory=$true,HelpMessage="Name of axa-bin-scheduler branch to build.")]
 	[ValidateNotNullOrEmpty()]
 	[String]$SchedulerBranch,
-	[parameter(Position=7,Mandatory=$true,ValueFromPipeline=$false,HelpMessage="Name of axa-bin-wwwroot branch to build.")]
+	[parameter(Mandatory=$true,HelpMessage="Name of axa-bin-wwwroot branch to build.")]
 	[ValidateNotNullOrEmpty()]
 	[String]$WwwBranch,
-	[parameter(Position=8,Mandatory=$true,ValueFromPipeline=$false,HelpMessage="Path to root directory for logs persistence.")]
+	[parameter(Mandatory=$true,HelpMessage="Path to root directory for logs persistence.")]
 	[ValidateNotNullOrEmpty()]
 	[String]$LogsPersistencePath,
-	[parameter(Position=9,Mandatory=$true,ValueFromPipeline=$false,HelpMessage="Receiver address.")]
+	[parameter(Mandatory=$true,HelpMessage="Receiver address.")]
 	[ValidateNotNullOrEmpty()]
 	[String]$MailSender,
-	[parameter(Position=10,Mandatory=$true,ValueFromPipeline=$false,HelpMessage="Receivers addresses.")]
+	[parameter(Mandatory=$true,HelpMessage="Receivers addresses.")]
 	[ValidateNotNullOrEmpty()]
 	[String[]]$MailReceivers
 )
