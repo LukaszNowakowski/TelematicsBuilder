@@ -82,7 +82,7 @@ completion of operations.
 When logs are backed up, next step of process removes all files created leaving only the back ups 
 of the log.
 
-## `ChangeVersion.ps1`
+## `CreateVersion.ps1`
 
 ### GitRepositoryRoot
 Path to Git's repository of organization hosting project. From location defined by this parameter
