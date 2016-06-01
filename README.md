@@ -82,7 +82,9 @@ completion of operations.
 When logs are backed up, next step of process removes all files created leaving only the back ups 
 of the log.
 
-## `CreateVersion.ps1`
+## `CreateSourceVersion.ps1`
+Sets version of libraries for all projects in source code branches and sets version tag in
+repository.
 
 ### GitRepositoryRoot
 Path to Git's repository of organization hosting project. From location defined by this parameter
@@ -94,6 +96,23 @@ Directory to store downloaded code temporarily.
 
 ### NewVersion
 Version number to set for all libraries. It must be in format A.B.C.D.
+
+### BranchName
+Name of branch to download.
+
+## `CreateDeployVersion.ps1`
+Sets version tag on deployment repositories.
+
+### GitRepositoryRoot
+Path to Git's repository of organization hosting project. From location defined by this parameter
+script will assume existence of repositories like `axa-applications` and `axa-services` and will
+proceed, as if they exist
+
+### RootDirectory
+Directory to store downloaded code temporarily.
+
+### NewVersion
+Version number to set. It must be in format A.B.C.D.
 
 ### BranchName
 Name of branch to download.
