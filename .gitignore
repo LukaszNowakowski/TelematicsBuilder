@@ -1,2 +1,3 @@
-/CreateVersionAxa.ps1
+/CreateSourceVersionAxa.ps1
+/CreateDeployVersionAxa.ps1
 /BuildAxa.ps1
