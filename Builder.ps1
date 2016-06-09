@@ -80,7 +80,7 @@ function Builder-BuildSolutions {
 		[String]$ConfigurationFile,
 		[String]$BranchRoot,
 		[String]$LogsDirectory,
-        [String]$BuildLog
+		[String]$BuildLog
 	)
 
 	$buildStart = Get-Date
@@ -95,9 +95,9 @@ function Builder-BuildSolutions {
 		Return;
 	}
 
-    $successes = 0
-    $failures = 0
-    [SystemCollections.ArrayList]$failedProjects = New-Object System.Collections.ArrayList
+	$successes = 0
+	$failures = 0
+	[SystemCollections.ArrayList]$failedProjects = New-Object System.Collections.ArrayList
 	foreach ($solution in $BranchConfiguration.Branch.Buildable.Solution)
 	{
 		$unitTestsLibrary = ''
@@ -131,8 +131,8 @@ function Builder-BuildSolutions {
 		}
 		else
 		{
-            $failures++
-            [void]$failedProjects.Add($solution.Path)
+			$failures++
+			[void]$failedProjects.Add($solution.Path)
 			Write-Host "Build for solution $($solution.Name) failed"
 		}
 	}
@@ -208,7 +208,7 @@ function Builder-PublishSolutions {
 		[String]$ConfigurationFile,
 		[String]$BranchRoot,
 		[String]$LogsDirectory,
-        [String]$PublishLog,
+		[String]$PublishLog,
 		[String]$SchedulerRoot,
 		[String]$WwwRoot
 	)
@@ -225,9 +225,9 @@ function Builder-PublishSolutions {
 		Return $False;
 	}
 
-    $successes = 0
-    $failures = 0
-    [SystemCollections.ArrayList]$failedProjects = New-Object System.Collections.ArrayList
+	$successes = 0
+	$failures = 0
+	[SystemCollections.ArrayList]$failedProjects = New-Object System.Collections.ArrayList
 	$succeeded = 0
 	$failures = 0
 	foreach ($solution in $BranchConfiguration.Branch.Buildable.Solution)
