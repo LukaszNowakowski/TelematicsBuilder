@@ -1,4 +1,24 @@
-﻿function Tools-CreateDirectoryIfNotExists {
+﻿function Tools-CompressDirectory {
+	param (
+		[String]$SourcePath,
+		[String]$TargetPath
+	)
+
+	Add-Type -A System.IO.Compression.FileSystem
+	[IO.Compression.ZipFile]::CreateFromDirectory($SourcePath, $TargetPath)
+}
+
+function Tools-RemovePathIfExists {
+	param (
+		[String]$Path
+	)
+
+	if (Test-Path $Path) {
+		Remove-Item $Path -Force -Recurse -ErrorAction Stop
+	}
+}
+
+function Tools-CreateDirectoryIfNotExists {
 	param (
 		[String]$DirectoryPath,
 		[Boolean]$ClearIfExists = $true

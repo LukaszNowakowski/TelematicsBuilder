@@ -1,14 +1,3 @@
-# Removes item pointed by path, if it exists.
-function RemovePathIfExists {
-	param (
-		[String]$Path
-	)
-
-	if (Test-Path $Path) {
-		Remove-Item $Path -Force -Recurse -ErrorAction Stop
-	}
-}
-
 # Migrates changes from Git repository to TFS repository
 function GitProxy-GetRepository {
 	param (
@@ -21,7 +10,7 @@ function GitProxy-GetRepository {
 	{
 		Write-Host "Downloading '$RemotePath'"
 		Write-Host "	Removing existing directory for download ($LocalPath)"
-		RemovePathIfExists $LocalPath
+		Tools-RemovePathIfExists $LocalPath
 		Write-Host "	Directory removed"
 		
 		Write-Host "	Downloading repository"

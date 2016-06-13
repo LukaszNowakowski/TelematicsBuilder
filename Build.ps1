@@ -28,7 +28,10 @@
 	[String]$MailSender,
 	[parameter(Mandatory=$true,HelpMessage="Receivers addresses.")]
 	[ValidateNotNullOrEmpty()]
-	[String[]]$MailReceivers
+	[String[]]$MailReceivers,
+	[parameter(Mandatory=$false,HelpMessage="Path to directory to store created package in")]
+	[ValidateNotNullOrEmpty()]
+	[String]$PackagesDirectory
 )
 
 function ResultsContainer {
@@ -70,6 +73,7 @@ $logsPackagePath = ''
 . "$PSSCriptRoot\GitProxy.ps1"
 . "$PSSCriptRoot\Builder.ps1"
 . "$PSSCriptRoot\MailSender.ps1"
+. "$PSSCriptRoot\Packager.ps1"
 
 function Initialize {
 	Clear-Host
@@ -158,7 +162,6 @@ function Publish {
 }
 
 function CommitChanges {
-	# Commit changes
 	$script:operationsResult.GitCommitStart = Get-Date
 	$GitCommitLog = (Join-Path $LogsDirectory 'GitCommit.log')
 	Start-Transcript -Path $GitCommitLog -Force -Append > $null
@@ -178,25 +181,44 @@ function CommitChanges {
 				Else
 				{
 					Write-Host "Commit of 'axa-bin-wwwroot' failed"
+					Return $false
 				}
 			}
 			Else
 			{
 				Write-Host "Commit of 'axa-bin-scheduler' failed"
+				Return $false
 			}
 		}
 		Else
 		{
 			Write-Host "Commit of 'axa-services' failed"
+			Return $false
 		}
 	}
 	Else
 	{
 		Write-Host "Commit of 'axa-applications' failed"
+		Return $false
 	}
 	
 	$script:operationsResult.GitCommitEnd = Get-Date
 	Stop-Transcript > $null
+	Return $true
+}
+
+function CreatePackages {
+	If (!$PackagesDirectory)
+	{
+		Return
+	}
+	
+	Tools-CreateDirectoryIfNotExists $PackagesDirectory $false
+	$packageTime = ("{0:yyyy-MM-dd_hh-mm-ss}" -f (Get-Date))
+	$schedulerPath = (Join-Path $PackagesDirectory ("scheduler_{0}.zip" -f $packageTime))
+	Packager-CreatePackage $script:schedulerRoot $schedulerPath
+	$schedulerPath = (Join-Path $PackagesDirectory ("wwwroot_{0}.zip" -f $packageTime))
+	Packager-CreatePackage $script:wwwRoot $schedulerPath
 }
 
 function CreateLogs {
@@ -211,9 +233,7 @@ function CreateLogs {
 	($script:operationsResult | ConvertTo-Xml -Depth 4 -NoTypeInformation).Save($logXmlPath)
 	$script:htmlLogPath = (Join-Path $LogsDirectory 'Log.html')
 	Tools-XsltTransform $logXmlPath $script:htmlLogPath
-
-	Add-Type -A System.IO.Compression.FileSystem
-	[IO.Compression.ZipFile]::CreateFromDirectory($LogsDirectory, $script:logsPackagePath)
+	Tools-CompressDirectory $LogsDirectory $script:logsPackagePath
 }
 
 function SendReport {
@@ -244,7 +264,7 @@ function BackupLogs {
 	$logDirectory = ('{0}\{1}' -f (Get-Date -f yyyy), (Get-Date -f MM))
 	$logDirectory = (Join-Path $LogsPersistencePath $logDirectory)
 	Tools-CreateDirectoryIfNotExists $logDirectory $false
-	$newFileName = $ApplicationsBranch + '_' + $ServicesBranch + '_' + ('{0:yyyy-MM-dd.HH-mm-ss}' -f (Get-Date)) + [System.IO.Path]::GetExtension($script:logsPackagePath)
+	$newFileName = $ApplicationsBranch + '_' + $ServicesBranch + '_' + ('{0:yyyy-MM-dd.hh-mm-ss}' -f (Get-Date)) + [System.IO.Path]::GetExtension($script:logsPackagePath)
 	$newFileName = (Join-Path $logDirectory $newFileName)
 	Copy-Item $script:logsPackagePath $newFileName
 }
@@ -263,7 +283,10 @@ If (RetrieveRepositories)
 	{
 		If (Publish)
 		{
-			CommitChanges
+			If (CommitChanges)
+			{
+				CreatePackages
+			}
 		}
 	}
 }
