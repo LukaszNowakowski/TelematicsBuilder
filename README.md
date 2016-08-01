@@ -118,4 +118,3 @@ Version number to set. It must be in format A.B.C.D.
 Name of branch to download.
 
 This application is provided as is.
-No warranty is provided.
