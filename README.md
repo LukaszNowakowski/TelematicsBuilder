@@ -116,3 +116,5 @@ Version number to set. It must be in format A.B.C.D.
 
 ### BranchName
 Name of branch to download.
+
+This application is provided as is.
